@@ -1,0 +1,225 @@
+import { useState } from 'react';
+import { useQuery, useMutation } from '@apollo/client/react';
+import {
+  GET_QUESTIONS,
+  CREATE_QUESTION,
+  UPDATE_QUESTION,
+  DELETE_QUESTION,
+  START_QUESTION,
+  STOP_QUESTION,
+  PAUSE_COUNTDOWN,
+  RESUME_COUNTDOWN,
+} from '../graphql/operations';
+
+const emptyForm = {
+  text: '',
+  optionA: '',
+  optionB: '',
+  optionC: '',
+  optionD: '',
+  correctAnswer: 'A',
+  countdownSeconds: 30,
+};
+
+export default function QuestionManager({ activeRound, onRoundChange }) {
+  const [form, setForm] = useState(emptyForm);
+  const [editingId, setEditingId] = useState(null);
+
+  const { data, loading, refetch } = useQuery(GET_QUESTIONS);
+  const [createQuestion, { loading: creating }] = useMutation(CREATE_QUESTION, {
+    onCompleted: () => {
+      setForm(emptyForm);
+      refetch();
+    },
+  });
+  const [updateQuestion, { loading: updating }] = useMutation(UPDATE_QUESTION, {
+    onCompleted: () => {
+      setForm(emptyForm);
+      setEditingId(null);
+      refetch();
+    },
+  });
+  const [deleteQuestion] = useMutation(DELETE_QUESTION, { onCompleted: () => refetch() });
+  const [startQuestion, { loading: starting }] = useMutation(START_QUESTION, {
+    onCompleted: (res) => onRoundChange?.(res.startQuestion),
+  });
+  const [stopQuestion, { loading: stopping }] = useMutation(STOP_QUESTION, {
+    onCompleted: (res) => onRoundChange?.(res.stopQuestion),
+  });
+  const [pauseCountdown, { loading: pausing }] = useMutation(PAUSE_COUNTDOWN, {
+    onCompleted: (res) => onRoundChange?.(res.pauseCountdown),
+  });
+  const [resumeCountdown, { loading: resuming }] = useMutation(RESUME_COUNTDOWN, {
+    onCompleted: (res) => onRoundChange?.(res.resumeCountdown),
+  });
+
+  const questions = data?.questions ?? [];
+  const hasActive = activeRound?.status === 'active';
+  const countdownPaused = activeRound?.countdownPaused;
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const input = {
+      text: form.text.trim(),
+      optionA: form.optionA.trim(),
+      optionB: form.optionB.trim(),
+      optionC: form.optionC.trim(),
+      optionD: form.optionD.trim(),
+      correctAnswer: form.correctAnswer,
+      countdownSeconds: Number(form.countdownSeconds) || 30,
+    };
+    if (editingId) {
+      updateQuestion({ variables: { id: editingId, input } });
+    } else {
+      createQuestion({ variables: { input } });
+    }
+  };
+
+  const startEdit = (q) => {
+    setEditingId(q.id);
+    setForm({
+      text: q.text,
+      optionA: q.optionA,
+      optionB: q.optionB,
+      optionC: q.optionC,
+      optionD: q.optionD,
+      correctAnswer: q.correctAnswer || 'A',
+      countdownSeconds: q.countdownSeconds ?? 30,
+    });
+  };
+
+  return (
+    <div className="card">
+      <h2>Question bank</h2>
+
+      <form className="form-grid" onSubmit={handleSubmit}>
+        <div>
+          <label>Question</label>
+          <textarea rows={2} value={form.text} onChange={(e) => setForm({ ...form, text: e.target.value })} required />
+        </div>
+        <div className="grid-2">
+          {['optionA', 'optionB', 'optionC', 'optionD'].map((key, i) => (
+            <div key={key}>
+              <label>Option {String.fromCharCode(65 + i)}</label>
+              <textarea rows={2} value={form[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })} required />
+            </div>
+          ))}
+        </div>
+        <div className="grid-2">
+          <div>
+            <label>Correct answer</label>
+            <select value={form.correctAnswer} onChange={(e) => setForm({ ...form, correctAnswer: e.target.value })}>
+              <option value="A">A</option>
+              <option value="B">B</option>
+              <option value="C">C</option>
+              <option value="D">D</option>
+            </select>
+          </div>
+          <div>
+            <label>Countdown (seconds)</label>
+            <input
+              type="number"
+              min={5}
+              max={600}
+              value={form.countdownSeconds}
+              onChange={(e) => setForm({ ...form, countdownSeconds: e.target.value })}
+              required
+            />
+          </div>
+        </div>
+        <div className="form-actions">
+          <button type="submit" disabled={creating || updating}>
+            {editingId ? 'Save changes' : 'Add question'}
+          </button>
+          {editingId && (
+            <button
+              type="button"
+              className="secondary"
+              onClick={() => {
+                setEditingId(null);
+                setForm(emptyForm);
+              }}
+            >
+              Cancel
+            </button>
+          )}
+        </div>
+      </form>
+
+      {loading ? (
+        <p>Loading questions…</p>
+      ) : (
+        <table className="question-table" style={{ marginTop: '1rem' }}>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Question</th>
+              <th>Answer</th>
+              <th>Timer</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {questions.map((q) => (
+              <tr key={q.id}>
+                <td>{q.id}</td>
+                <td>{q.text}</td>
+                <td>{q.correctAnswer}</td>
+                <td>{q.countdownSeconds ?? 30}s</td>
+                <td>
+                  <div className="form-actions" style={{ flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      disabled={hasActive || starting}
+                      onClick={() => startQuestion({ variables: { questionId: q.id } })}
+                    >
+                      Start
+                    </button>
+                    <button type="button" className="secondary" onClick={() => startEdit(q)}>
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      className="danger"
+                      onClick={() => {
+                        if (window.confirm('Delete this question?')) {
+                          deleteQuestion({ variables: { id: q.id } });
+                        }
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      {hasActive && (
+        <div className="form-actions" style={{ marginTop: '1rem' }}>
+          <button
+            type="button"
+            className="secondary"
+            disabled={pausing || countdownPaused}
+            onClick={() => pauseCountdown()}
+          >
+            Pause
+          </button>
+          <button
+            type="button"
+            className="secondary"
+            disabled={resuming || !countdownPaused}
+            onClick={() => resumeCountdown()}
+          >
+            Resume
+          </button>
+          <button type="button" className="danger" disabled={stopping} onClick={() => stopQuestion()}>
+            Stop round & reveal answer
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}

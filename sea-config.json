@@ -1,0 +1,6 @@
+{
+    "main": "dist_pkg/bundled.js",
+    "output": "dist_pkg/prep-blob.blob",
+    "useESM": true,
+    "disableSentinel": false
+  }
