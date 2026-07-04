@@ -4,6 +4,7 @@ import { useTwitchAuth } from '../hooks/useTwitchAuth';
 const SCOPES = [
   'openid',
   'chat:read',
+  'chat:edit',
 ].join(' ');
 
 export default function Auth() {

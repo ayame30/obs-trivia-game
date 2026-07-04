@@ -44,6 +44,7 @@ export function useTwitchAuth() {
       headers: { Authorization: `OAuth ${accessToken}` },
     })
       .then((res) => {
+        console.log(res);
         if (!res.ok) throw new Error('Invalid token');
         return res.json();
       })

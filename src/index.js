@@ -14,7 +14,7 @@ import { WebSocketServer } from 'ws';
 import { useServer } from 'graphql-ws/lib/use/ws';
 import { typeDefs } from './schema.js';
 import { resolvers } from './resolvers.js';
-import { chatMonitor } from './twitch/chatMonitor.js';
+import { chatMonitor, restoreActiveRoundCountdown } from './twitch/chatMonitor.js';
 import { getTwitchAccessToken } from './db.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -112,4 +112,5 @@ console.log(chalk.grey(`To stop the server, press Ctrl+C`));
 
 if (getTwitchAccessToken()) {
   await chatMonitor.connect();
+  restoreActiveRoundCountdown();
 }
