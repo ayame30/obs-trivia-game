@@ -81,6 +81,7 @@ export class TwitchChatMonitor {
     this.countdownRoundId = null;
     this.chatLog = [];
     this.chatLogRoundId = null;
+    this.deadlineSentForRoundId = null;
   }
 
   async connect() {
@@ -218,6 +219,13 @@ export class TwitchChatMonitor {
     }
   }
 
+  sendDeadlineIfNeeded(roundId) {
+    if (!roundId || this.deadlineSentForRoundId === roundId) return;
+    this.deadlineSentForRoundId = roundId;
+    this.logChatLogBeforeDeadline(roundId);
+    this.sendChatMessage(DEADLINE_MESSAGE);
+  }
+
   scheduleCountdownEnd(roundRow) {
     this.clearCountdownTimer();
     if (!roundRow || roundRow.status !== 'active' || roundRow.countdown_paused) {
@@ -234,12 +242,12 @@ export class TwitchChatMonitor {
       const active = getActiveRound();
       if (!active || active.id !== roundId || active.status !== 'active') return;
       if (active.countdown_paused) return;
-      this.logChatLogBeforeDeadline(roundId);
-      this.sendChatMessage(DEADLINE_MESSAGE);
+      this.sendDeadlineIfNeeded(roundId);
     }, delayMs);
   }
 
   onQuestionStarted(roundRow) {
+    this.deadlineSentForRoundId = null;
     this.resetChatLog(roundRow.id);
     this.sendChatMessage(formatQuestionForChat(roundRow));
     this.scheduleCountdownEnd(roundRow);
@@ -249,8 +257,9 @@ export class TwitchChatMonitor {
     this.scheduleCountdownEnd(roundRow);
   }
 
-  onQuestionEnded() {
+  onQuestionEnded(roundRow) {
     this.clearCountdownTimer();
+    this.sendDeadlineIfNeeded(roundRow?.id ?? this.chatLogRoundId);
     this.clearChatLog();
   }
 
@@ -302,7 +311,7 @@ export function publishQuestionStarted(roundRow) {
 }
 
 export function publishQuestionEnded(roundRow) {
-  chatMonitor.onQuestionEnded();
+  chatMonitor.onQuestionEnded(roundRow);
   const round = mapRound(roundRow, { revealAnswer: true });
   pubsub.publish(TOPICS.QUESTION_ENDED, { questionEnded: round });
   return round;
