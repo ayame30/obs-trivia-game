@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@100..900&display=swap');
+
 :root {
   --bg: #0f1117;
   --surface: #1a1d27;
@@ -13,7 +15,7 @@
   --vote-b: #3dd68c;
   --vote-c: #f5a623;
   --vote-d: #f25f5c;
-  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-family: 'Noto Sans TC', 'Segoe UI', system-ui, sans-serif;
   color: var(--text);
 }
 

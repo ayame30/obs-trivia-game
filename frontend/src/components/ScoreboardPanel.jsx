@@ -22,10 +22,10 @@ export default function ScoreboardPanel({ entries }) {
               damping: 30
             }}
           >
-            <span className="name">
+            <span className="name" style={{ fontWeight: 900}}>
               {entry.displayName}
             </span>
-            <strong className="score">{entry.score}</strong>
+            <strong className="score" style={{ fontWeight: 900}}>{entry.score}</strong>
           </motion.li>
         ))}
       </AnimatePresence>
