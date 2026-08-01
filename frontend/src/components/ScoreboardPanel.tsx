@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { ScoreboardEntry } from '../types';
 
@@ -5,9 +6,23 @@ interface ScoreboardPanelProps {
   entries: ScoreboardEntry[];
 }
 
-export default function ScoreboardPanel({ entries }: ScoreboardPanelProps) {
-  const sorted = [...entries].sort((a, b) => b.score - a.score);
+const SCOREBOARD_SLOTS = 10;
 
+export default function ScoreboardPanel({ entries }: ScoreboardPanelProps) {
+  const sorted = useMemo(() => {
+    const ranked = [...entries].sort((a, b) => b.score - a.score);
+    if (ranked.length >= SCOREBOARD_SLOTS) return ranked;
+
+    const placeholders: ScoreboardEntry[] = Array.from(
+      { length: SCOREBOARD_SLOTS - ranked.length },
+      (_, index) => ({
+        twitchUserId: `placeholder-${index}`,
+        displayName: '-',
+        score: 0,
+      })
+    );
+    return [...ranked, ...placeholders];
+  }, [entries]);
   return (
     <motion.ol layout className="scoreboard-list" style={{ listStyle: 'none', padding: 0 }}>
       <AnimatePresence>
