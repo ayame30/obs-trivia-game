@@ -8,7 +8,7 @@ export default function Overlay() {
 
   return (
     <div className="overlay-page">
-      <div className={`overlay-card ${round ? 'show': 'hide'}`}>
+      <div className={`overlay-card ${round ? 'show' : 'hide'}`}>
         <LiveRoundPanel round={round} showCorrect={showCorrect} countdownVariant="overlay" />
       </div>
     </div>

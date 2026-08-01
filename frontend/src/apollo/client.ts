@@ -5,7 +5,7 @@ import { OperationTypeNode } from 'graphql';
 
 const httpUri = import.meta.env.VITE_GRAPHQL_HTTP || '/graphql';
 
-function resolveWsUri() {
+function resolveWsUri(): string {
   if (import.meta.env.VITE_GRAPHQL_WS) {
     return import.meta.env.VITE_GRAPHQL_WS;
   }

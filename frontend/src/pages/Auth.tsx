@@ -1,11 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useTwitchAuth } from '../hooks/useTwitchAuth';
 
-const SCOPES = [
-  'openid',
-  'chat:read',
-  'chat:edit',
-].join(' ');
+const SCOPES = ['openid', 'chat:read', 'chat:edit'].join(' ');
 
 export default function Auth() {
   const { accessToken, login, userId, loading } = useTwitchAuth();
@@ -15,7 +11,10 @@ export default function Auth() {
   if (!clientId || clientId === 'your_twitch_client_id') {
     return (
       <div className="card">
-        <p>Set <code>VITE_TWITCH_CLIENT_ID</code> in <code>frontend/.env</code> (same as backend TWITCH_CLIENT_ID).</p>
+        <p>
+          Set <code>VITE_TWITCH_CLIENT_ID</code> in <code>frontend/.env</code> (same as backend
+          TWITCH_CLIENT_ID).
+        </p>
       </div>
     );
   }
@@ -47,7 +46,8 @@ export default function Auth() {
         <strong>{login}</strong> (id: {userId})
       </p>
       <p style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>
-        Token stored in this browser session. Go to the dashboard to connect chat to the trivia backend.
+        Token stored in this browser session. Go to the dashboard to connect chat to the trivia
+        backend.
       </p>
       <Link to="/">← Dashboard</Link>
     </div>

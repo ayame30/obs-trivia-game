@@ -15,7 +15,7 @@ import { useServer } from 'graphql-ws/lib/use/ws';
 import { typeDefs } from './schema.js';
 import { resolvers } from './resolvers.js';
 import { chatMonitor, restoreActiveRoundCountdown } from './twitch/chatMonitor.js';
-import { getTwitchAccessToken } from './db.js';
+import { getTwitchAccessToken, getScoreboard } from './db.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const frontendDist = path.join(__dirname, '../frontend/dist');
@@ -32,7 +32,7 @@ const wsServer = new WebSocketServer({
   path: '/graphql',
 });
 
-const serverCleanup = useServer({ schema }, wsServer);
+const serverCleanup = useServer({ schema }, wsServer as Parameters<typeof useServer>[1]);
 
 const apolloServer = new ApolloServer({
   schema,
@@ -77,7 +77,7 @@ app.get('*', (req, res, next) => {
   });
 });
 
-await new Promise((resolve) => httpServer.listen({ port: PORT }, resolve));
+await new Promise<void>((resolve) => httpServer.listen({ port: PORT }, resolve));
 
 const base = `http://localhost:${PORT}`;
 console.log(chalk.green('--------------------------------'));
@@ -88,9 +88,6 @@ console.log(chalk.green(`Overlays: http://localhost:${PORT}/overlay`));
 console.log(chalk.green(`Scoreboard Overlays: http://localhost:${PORT}/scoreboard-overlay`));
 console.log(chalk.blue('--------------------------------'));
 
-import { getScoreboard } from './db.js';
-
-// Print current scoreboard when the server starts
 const scoreboard = getScoreboard();
 if (scoreboard.length === 0) {
   console.log(chalk.yellow('Scoreboard is empty.'));

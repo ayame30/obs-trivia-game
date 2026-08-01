@@ -1,27 +1,33 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation } from '@apollo/client/react';
 import { UPDATE_SCOREBOARD } from '../graphql/operations';
+import type { ScoreboardEntry, UpdateScoreboardMutation } from '../types';
 
-function clampScore(value) {
+function clampScore(value: string | number): number {
   const n = Number.parseInt(String(value), 10);
   if (Number.isNaN(n)) return 0;
   return Math.max(0, n);
 }
 
-function buildDraft(entries) {
-  const next = {};
+function buildDraft(entries: ScoreboardEntry[] | null | undefined): Record<string, number> {
+  const next: Record<string, number> = {};
   for (const entry of entries ?? []) {
     next[entry.twitchUserId] = entry.score;
   }
   return next;
 }
 
-export default function ScoreboardEditor({ entries, onSaved }) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState({});
-  const [saveError, setSaveError] = useState(null);
+interface ScoreboardEditorProps {
+  entries: ScoreboardEntry[];
+  onSaved?: (entries: ScoreboardEntry[]) => void;
+}
 
-  const [updateScoreboard, { loading: saving }] = useMutation(UPDATE_SCOREBOARD, {
+export default function ScoreboardEditor({ entries, onSaved }: ScoreboardEditorProps) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState<Record<string, number>>({});
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const [updateScoreboard, { loading: saving }] = useMutation<UpdateScoreboardMutation>(UPDATE_SCOREBOARD, {
     onCompleted: (res) => {
       setSaveError(null);
       setEditing(false);
@@ -46,7 +52,7 @@ export default function ScoreboardEditor({ entries, onSaved }) {
   }, [entries, draft, editing]);
 
   const dirtyUpdates = useMemo(() => {
-    const updates = [];
+    const updates: Array<{ twitchUserId: string; score: number }> = [];
     for (const entry of entries ?? []) {
       const next = draft[entry.twitchUserId];
       if (next === undefined) continue;
@@ -60,12 +66,12 @@ export default function ScoreboardEditor({ entries, onSaved }) {
 
   const isDirty = dirtyUpdates.length > 0;
 
-  const setScore = (twitchUserId, value) => {
+  const setScore = (twitchUserId: string, value: string) => {
     setDraft((prev) => ({ ...prev, [twitchUserId]: clampScore(value) }));
     setSaveError(null);
   };
 
-  const adjust = (twitchUserId, delta) => {
+  const adjust = (twitchUserId: string, delta: number) => {
     setDraft((prev) => ({
       ...prev,
       [twitchUserId]: clampScore((prev[twitchUserId] ?? 0) + delta),

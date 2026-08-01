@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useQuery, useSubscription } from '@apollo/client/react';
 import {
   GET_ACTIVE_ROUND,
@@ -10,18 +10,31 @@ import {
   SCOREBOARD_UPDATED,
   ROUNDS_RESET,
 } from '../graphql/operations';
+import type {
+  Round,
+  ScoreboardEntry,
+  TriviaLiveContextValue,
+  GetActiveRoundData,
+  GetScoreboardData,
+  QuestionStartedData,
+  VoteCountsUpdatedData,
+  CountdownUpdatedData,
+  QuestionEndedData,
+  ScoreboardUpdatedData,
+  RoundsResetData,
+} from '../types';
 
-const TriviaLiveContext = createContext(null);
+const TriviaLiveContext = createContext<TriviaLiveContextValue | null>(null);
 
-export function TriviaLiveProvider({ children }) {
-  const [round, setRound] = useState(null);
-  const [scoreboard, setScoreboard] = useState([]);
-  const [subError, setSubError] = useState(null);
+export function TriviaLiveProvider({ children }: { children: ReactNode }) {
+  const [round, setRound] = useState<Round | null>(null);
+  const [scoreboard, setScoreboard] = useState<ScoreboardEntry[]>([]);
+  const [subError, setSubError] = useState<string | null>(null);
 
-  const { data: roundData, loading: roundLoading, refetch: refetchRound } = useQuery(
+  const { data: roundData, loading: roundLoading, refetch: refetchRound } = useQuery<GetActiveRoundData>(
     GET_ACTIVE_ROUND
   );
-  const { data: scoreData, loading: scoreLoading, refetch: refetchScoreboard } = useQuery(
+  const { data: scoreData, loading: scoreLoading, refetch: refetchScoreboard } = useQuery<GetScoreboardData>(
     GET_SCOREBOARD
   );
 
@@ -34,15 +47,15 @@ export function TriviaLiveProvider({ children }) {
   }, [scoreData]);
 
   const subOptions = {
-    onError: (err) => setSubError(err.message),
+    onError: (err: Error) => setSubError(err.message),
   };
 
-  const { data: startedData } = useSubscription(QUESTION_STARTED, subOptions);
-  const { data: votesData } = useSubscription(VOTE_COUNTS_UPDATED, subOptions);
-  const { data: countdownData } = useSubscription(COUNTDOWN_UPDATED, subOptions);
-  const { data: endedData } = useSubscription(QUESTION_ENDED, subOptions);
-  const { data: boardData } = useSubscription(SCOREBOARD_UPDATED, subOptions);
-  const { data: roundsResetData } = useSubscription(ROUNDS_RESET, subOptions);
+  const { data: startedData } = useSubscription<QuestionStartedData>(QUESTION_STARTED, subOptions);
+  const { data: votesData } = useSubscription<VoteCountsUpdatedData>(VOTE_COUNTS_UPDATED, subOptions);
+  const { data: countdownData } = useSubscription<CountdownUpdatedData>(COUNTDOWN_UPDATED, subOptions);
+  const { data: endedData } = useSubscription<QuestionEndedData>(QUESTION_ENDED, subOptions);
+  const { data: boardData } = useSubscription<ScoreboardUpdatedData>(SCOREBOARD_UPDATED, subOptions);
+  const { data: roundsResetData } = useSubscription<RoundsResetData>(ROUNDS_RESET, subOptions);
 
   useEffect(() => {
     if (startedData?.questionStarted) {
@@ -89,7 +102,7 @@ export function TriviaLiveProvider({ children }) {
   }, [roundsResetData]);
 
   const value = useMemo(
-    () => ({
+    (): TriviaLiveContextValue => ({
       round,
       setRound,
       scoreboard,
@@ -109,7 +122,7 @@ export function TriviaLiveProvider({ children }) {
   );
 }
 
-export function useTriviaLive() {
+export function useTriviaLive(): TriviaLiveContextValue {
   const ctx = useContext(TriviaLiveContext);
   if (!ctx) {
     throw new Error('useTriviaLive must be used within TriviaLiveProvider');

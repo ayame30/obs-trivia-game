@@ -30,11 +30,12 @@ import {
   publishQuestionEnded,
   publishCountdownUpdated,
 } from './twitch/chatMonitor.js';
+import type { Round, ScoreboardUpdateInput } from './types.js';
 
 export const resolvers = {
   Query: {
-    questions: () => getQuestions().map(mapQuestion),
-    question: (_, { id }) => mapQuestion(getQuestion(id)),
+    questions: () => getQuestions().map(mapQuestion).filter(Boolean),
+    question: (_: unknown, { id }: { id: string }) => mapQuestion(getQuestion(id)),
     activeRound: () => {
       const row = getActiveRound();
       return row ? mapRound(row) : null;
@@ -44,13 +45,19 @@ export const resolvers = {
   },
 
   Mutation: {
-    createQuestion: (_, { input }) => {
+    createQuestion: (_: unknown, { input }: { input: Parameters<typeof createQuestion>[0] }) => {
       const q = createQuestion(input);
       return mapQuestion(q);
     },
-    updateQuestion: (_, { id, input }) => mapQuestion(updateQuestion(Number(id), input)),
-    deleteQuestion: (_, { id }) => deleteQuestion(Number(id)),
-    setTwitchToken: async (_, { accessToken, channel }) => {
+    updateQuestion: (
+      _: unknown,
+      { id, input }: { id: string; input: Parameters<typeof updateQuestion>[1] }
+    ) => mapQuestion(updateQuestion(Number(id), input)),
+    deleteQuestion: (_: unknown, { id }: { id: string }) => deleteQuestion(Number(id)),
+    setTwitchToken: async (
+      _: unknown,
+      { accessToken, channel }: { accessToken: string; channel?: string }
+    ) => {
       const user = await validateTwitchToken(accessToken);
       const login = user.login;
       const row = setTwitchConfig({
@@ -62,10 +69,10 @@ export const resolvers = {
       await chatMonitor.connect();
       return mapTwitchConfig(row);
     },
-    startQuestion: (_, { questionId }) => {
+    startQuestion: (_: unknown, { questionId }: { questionId: string }) => {
       const row = startRound(Number(questionId));
-      const round = publishQuestionStarted(row);
-      return round;
+      if (!row) throw new Error('Failed to start round');
+      return publishQuestionStarted(row);
     },
     stopQuestion: async () => {
       const active = getActiveRound();
@@ -73,6 +80,7 @@ export const resolvers = {
         throw new Error('No active question round');
       }
       const row = stopRound(active.id);
+      if (!row) throw new Error('Failed to stop round');
       const round = publishQuestionEnded(row);
       await publishScoreboard();
       return round;
@@ -83,6 +91,7 @@ export const resolvers = {
         throw new Error('No active question round');
       }
       const row = pauseCountdown(active.id);
+      if (!row) throw new Error('Failed to pause countdown');
       return publishCountdownUpdated(row);
     },
     resumeCountdown: () => {
@@ -91,13 +100,14 @@ export const resolvers = {
         throw new Error('No active question round');
       }
       const row = resumeCountdown(active.id);
+      if (!row) throw new Error('Failed to resume countdown');
       return publishCountdownUpdated(row);
     },
     resetScoreboard: async () => {
       resetScoreboard();
       return publishScoreboard();
     },
-    updateScoreboard: async (_, { updates }) => {
+    updateScoreboard: async (_: unknown, { updates }: { updates: ScoreboardUpdateInput[] }) => {
       batchUpdateScoreboard(updates);
       return publishScoreboard();
     },
@@ -133,8 +143,8 @@ export const resolvers = {
   },
 
   Round: {
-    voteCounts: (round) => getVoteCounts(Number(round.id)),
-    countdownRemainingSeconds: (round) => {
+    voteCounts: (round: Round) => getVoteCounts(Number(round.id)),
+    countdownRemainingSeconds: (round: Round) => {
       if (round.status !== 'active') return 0;
       if (round.countdownPaused) {
         return round.countdownRemainingSeconds ?? 0;

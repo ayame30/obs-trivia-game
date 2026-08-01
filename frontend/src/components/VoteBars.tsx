@@ -1,11 +1,19 @@
-const CHOICES = [
+import type { AnswerChoice, VoteCounts } from '../types';
+
+const CHOICES: Array<{ key: AnswerChoice; label: string; className: string }> = [
   { key: 'A', label: 'A', className: 'a' },
   { key: 'B', label: 'B', className: 'b' },
   { key: 'C', label: 'C', className: 'c' },
   { key: 'D', label: 'D', className: 'd' },
 ];
 
-export default function VoteBars({ voteCounts, correctAnswer, showCorrect }) {
+interface VoteBarsProps {
+  voteCounts: VoteCounts | null | undefined;
+  correctAnswer?: AnswerChoice | null;
+  showCorrect?: boolean;
+}
+
+export default function VoteBars({ voteCounts, correctAnswer, showCorrect }: VoteBarsProps) {
   const total = voteCounts?.total || 0;
 
   return (
@@ -19,7 +27,11 @@ export default function VoteBars({ voteCounts, correctAnswer, showCorrect }) {
           <div
             key={key}
             className={`vote-row ${className}${isCorrect ? ' correct' : ''}`}
-            style={isCorrect ? { outline: '2px solid var(--success)', borderRadius: 8, padding: 4 } : { outline: '2px solid transparent', borderRadius: 8, padding: 4 }}
+            style={
+              isCorrect
+                ? { outline: '2px solid var(--success)', borderRadius: 8, padding: 4 }
+                : { outline: '2px solid transparent', borderRadius: 8, padding: 4 }
+            }
           >
             <span className="label">{label}</span>
             <div className="bar-wrap">

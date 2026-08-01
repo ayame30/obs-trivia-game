@@ -4,5 +4,5 @@ title Stream Trivia
 cd /d "%~dp0"
 
 echo Starting Stream Trivia...
-call node src/index.js
+call npx tsx src/index.ts
 pause

@@ -6,11 +6,12 @@ import TwitchSetup from '../components/TwitchSetup';
 import { useTriviaLive } from '../hooks/useTriviaLive';
 import { RESET_SCOREBOARD, RESET_ROUNDS } from '../graphql/operations';
 import { useTwitchAuth } from '../hooks/useTwitchAuth';
+import type { ResetScoreboardMutation } from '../types';
 
 export default function Dashboard() {
   const { round, setRound, scoreboard, setScoreboard, loading, subError } = useTriviaLive();
   const { accessToken, login } = useTwitchAuth();
-  const [resetScoreboard, { loading: resettingScores }] = useMutation(RESET_SCOREBOARD, {
+  const [resetScoreboard, { loading: resettingScores }] = useMutation<ResetScoreboardMutation>(RESET_SCOREBOARD, {
     onCompleted: (res) => setScoreboard(res.resetScoreboard),
   });
   const [resetRounds, { loading: resettingRounds }] = useMutation(RESET_ROUNDS, {
@@ -26,7 +27,14 @@ export default function Dashboard() {
 
       <div className="grid-2">
         <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '0.75rem',
+            }}
+          >
             <h2 style={{ margin: 0 }}>Live round</h2>
             <button
               type="button"
@@ -49,7 +57,14 @@ export default function Dashboard() {
         </div>
 
         <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '0.75rem',
+            }}
+          >
             <h2 style={{ margin: 0 }}>Scoreboard</h2>
             <button
               type="button"

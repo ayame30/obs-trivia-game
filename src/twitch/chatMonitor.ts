@@ -10,19 +10,26 @@ import {
   mapScoreboardEntry,
 } from '../db.js';
 import { pubsub, TOPICS } from '../pubsub.js';
+import type {
+  AnswerChoice,
+  ChatLogEntry,
+  ParsedPrivmsg,
+  Round,
+  RoundRow,
+  ScoreboardEntry,
+} from '../types.js';
 
 const TWITCH_IRC = process.env.TWITCH_CHAT_WSS || 'wss://irc-ws.chat.twitch.tv';
-const TWITCH_MSG_MAX_LEN = 500;
 const DEADLINE_MESSAGE = '===== END =====';
 
 /** Parse chat message as answer: A, B, C, D (optional leading !) */
-export function parseAnswer(message) {
+export function parseAnswer(message: string): AnswerChoice | null {
   const trimmed = message.trim();
   const match = trimmed.match(/^!?([ABCD])$/i);
-  return match ? match[1].toUpperCase() : null;
+  return match ? (match[1].toUpperCase() as AnswerChoice) : null;
 }
 
-export function formatQuestionForChat(roundRow) {
+export function formatQuestionForChat(roundRow: RoundRow): string {
   return [
     `Q${roundRow.id}: ${roundRow.text}`,
     `A ) ${roundRow.option_a}`,
@@ -32,25 +39,8 @@ export function formatQuestionForChat(roundRow) {
   ].join('\n');
 }
 
-function splitChatLines(text, maxLen = TWITCH_MSG_MAX_LEN) {
-  const chunks = [];
-  for (const line of String(text).split('\n')) {
-    if (!line) {
-      chunks.push('');
-      continue;
-    }
-    let rest = line;
-    while (rest.length > maxLen) {
-      chunks.push(rest.slice(0, maxLen));
-      rest = rest.slice(maxLen);
-    }
-    chunks.push(rest);
-  }
-  return chunks;
-}
-
-function parseIrcTags(tagSection) {
-  const info = {};
+function parseIrcTags(tagSection: string): Record<string, string> {
+  const info: Record<string, string> = {};
   for (const part of tagSection.split(';')) {
     const eq = part.indexOf('=');
     if (eq === -1) continue;
@@ -59,7 +49,7 @@ function parseIrcTags(tagSection) {
   return info;
 }
 
-function parsePrivmsg(raw) {
+function parsePrivmsg(raw: string): ParsedPrivmsg | null {
   if (!raw.includes('PRIVMSG')) return null;
   const [tagSection, rest] = raw.split(' PRIVMSG ');
   const info = parseIrcTags(tagSection.replace(/^@/, ''));
@@ -73,18 +63,16 @@ function parsePrivmsg(raw) {
 }
 
 export class TwitchChatMonitor {
-  constructor() {
-    this.ws = null;
-    this.reconnectTimer = null;
-    this.connected = false;
-    this.countdownTimer = null;
-    this.countdownRoundId = null;
-    this.chatLog = [];
-    this.chatLogRoundId = null;
-    this.deadlineSentForRoundId = null;
-  }
+  ws: WebSocket | null = null;
+  reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  connected = false;
+  countdownTimer: ReturnType<typeof setTimeout> | null = null;
+  countdownRoundId: number | null = null;
+  chatLog: ChatLogEntry[] = [];
+  chatLogRoundId: number | null = null;
+  deadlineSentForRoundId: number | null = null;
 
-  async connect() {
+  async connect(): Promise<boolean> {
     const token = getTwitchAccessToken();
     const config = getTwitchConfig();
     if (!token || !config) {
@@ -100,10 +88,10 @@ export class TwitchChatMonitor {
       this.ws = new WebSocket(TWITCH_IRC);
 
       this.ws.on('open', () => {
-        this.ws.send('CAP REQ :twitch.tv/tags twitch.tv/commands');
-        this.ws.send(`PASS oauth:${token}`);
-        this.ws.send(`NICK ${login}`);
-        this.ws.send(`JOIN #${channel.toLowerCase()}`);
+        this.ws!.send('CAP REQ :twitch.tv/tags twitch.tv/commands');
+        this.ws!.send(`PASS oauth:${token}`);
+        this.ws!.send(`NICK ${login}`);
+        this.ws!.send(`JOIN #${channel.toLowerCase()}`);
         this.connected = true;
         console.log(`[twitch] Connected to #${channel}`);
         const active = getActiveRound();
@@ -119,7 +107,7 @@ export class TwitchChatMonitor {
       this.ws.on('message', (data) => {
         const raw = data.toString();
         if (raw.includes('PING :tmi.twitch.tv')) {
-          this.ws.send('PONG :tmi.twitch.tv');
+          this.ws!.send('PONG :tmi.twitch.tv');
           return;
         }
         this.handleMessage(raw);
@@ -131,13 +119,13 @@ export class TwitchChatMonitor {
         this.scheduleReconnect();
       });
 
-      this.ws.on('error', (err) => {
+      this.ws.on('error', (err: Error) => {
         console.error('[twitch] WebSocket error:', err.message);
       });
     });
   }
 
-  scheduleReconnect() {
+  scheduleReconnect(): void {
     if (this.reconnectTimer) return;
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null;
@@ -145,7 +133,7 @@ export class TwitchChatMonitor {
     }, 10000);
   }
 
-  disconnect() {
+  disconnect(): void {
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
@@ -159,13 +147,13 @@ export class TwitchChatMonitor {
     this.connected = false;
   }
 
-  getChannelName() {
+  getChannelName(): string | null {
     const config = getTwitchConfig();
     if (!config) return null;
     return (config.channel || config.login).toLowerCase();
   }
 
-  sendChatMessage(text) {
+  sendChatMessage(text: string): boolean {
     if (!this.ws || !this.connected) {
       console.log('[twitch] Chat not connected, skipping message');
       return false;
@@ -173,13 +161,13 @@ export class TwitchChatMonitor {
     const channel = this.getChannelName();
     if (!channel) return false;
 
-      console.log(`PRIVMSG #${channel} :${text}\r\n`);
-      this.ws.send(`PRIVMSG #${channel} :${text}\r\n`);
+    console.log(`PRIVMSG #${channel} :${text}\r\n`);
+    this.ws.send(`PRIVMSG #${channel} :${text}\r\n`);
 
     return true;
   }
 
-  clearCountdownTimer() {
+  clearCountdownTimer(): void {
     if (this.countdownTimer) {
       clearTimeout(this.countdownTimer);
       this.countdownTimer = null;
@@ -187,17 +175,17 @@ export class TwitchChatMonitor {
     this.countdownRoundId = null;
   }
 
-  resetChatLog(roundId) {
+  resetChatLog(roundId: number): void {
     this.chatLog = [];
     this.chatLogRoundId = roundId;
   }
 
-  clearChatLog() {
+  clearChatLog(): void {
     this.chatLog = [];
     this.chatLogRoundId = null;
   }
 
-  appendChatLog(msg) {
+  appendChatLog(msg: ParsedPrivmsg): void {
     this.chatLog.push({
       displayName: msg.displayName,
       userId: msg.userId,
@@ -206,7 +194,7 @@ export class TwitchChatMonitor {
     });
   }
 
-  logChatLogBeforeDeadline(roundId) {
+  logChatLogBeforeDeadline(roundId: number): void {
     if (this.chatLogRoundId !== roundId) return;
     const label = `Round #${roundId}`;
     if (this.chatLog.length === 0) {
@@ -219,14 +207,14 @@ export class TwitchChatMonitor {
     }
   }
 
-  sendDeadlineIfNeeded(roundId) {
+  sendDeadlineIfNeeded(roundId: number | null | undefined): void {
     if (!roundId || this.deadlineSentForRoundId === roundId) return;
     this.deadlineSentForRoundId = roundId;
     this.logChatLogBeforeDeadline(roundId);
     this.sendChatMessage(DEADLINE_MESSAGE);
   }
 
-  scheduleCountdownEnd(roundRow) {
+  scheduleCountdownEnd(roundRow: RoundRow | null | undefined): void {
     this.clearCountdownTimer();
     if (!roundRow || roundRow.status !== 'active' || roundRow.countdown_paused) {
       return;
@@ -246,24 +234,24 @@ export class TwitchChatMonitor {
     }, delayMs);
   }
 
-  onQuestionStarted(roundRow) {
+  onQuestionStarted(roundRow: RoundRow): void {
     this.deadlineSentForRoundId = null;
     this.resetChatLog(roundRow.id);
     this.sendChatMessage(formatQuestionForChat(roundRow));
     this.scheduleCountdownEnd(roundRow);
   }
 
-  onCountdownUpdated(roundRow) {
+  onCountdownUpdated(roundRow: RoundRow): void {
     this.scheduleCountdownEnd(roundRow);
   }
 
-  onQuestionEnded(roundRow) {
+  onQuestionEnded(roundRow: RoundRow | null | undefined): void {
     this.clearCountdownTimer();
     this.sendDeadlineIfNeeded(roundRow?.id ?? this.chatLogRoundId);
     this.clearChatLog();
   }
 
-  handleMessage(raw) {
+  handleMessage(raw: string): void {
     const msg = parsePrivmsg(raw);
     if (!msg?.userId || !msg.displayName) return;
 
@@ -290,41 +278,41 @@ export class TwitchChatMonitor {
     }
   }
 
-  isConnected() {
+  isConnected(): boolean {
     return this.connected;
   }
 }
 
 export const chatMonitor = new TwitchChatMonitor();
 
-export async function publishScoreboard() {
+export async function publishScoreboard(): Promise<ScoreboardEntry[]> {
   const entries = getScoreboard().map(mapScoreboardEntry);
   pubsub.publish(TOPICS.SCOREBOARD_UPDATED, { scoreboardUpdated: entries });
   return entries;
 }
 
-export function publishQuestionStarted(roundRow) {
+export function publishQuestionStarted(roundRow: RoundRow): Round {
   chatMonitor.onQuestionStarted(roundRow);
-  const round = mapRound(roundRow);
+  const round = mapRound(roundRow)!;
   pubsub.publish(TOPICS.QUESTION_STARTED, { questionStarted: round });
   return round;
 }
 
-export function publishQuestionEnded(roundRow) {
+export function publishQuestionEnded(roundRow: RoundRow): Round {
   chatMonitor.onQuestionEnded(roundRow);
-  const round = mapRound(roundRow, { revealAnswer: true });
+  const round = mapRound(roundRow, { revealAnswer: true })!;
   pubsub.publish(TOPICS.QUESTION_ENDED, { questionEnded: round });
   return round;
 }
 
-export function publishCountdownUpdated(roundRow) {
+export function publishCountdownUpdated(roundRow: RoundRow): Round {
   chatMonitor.onCountdownUpdated(roundRow);
-  const round = mapRound(roundRow);
+  const round = mapRound(roundRow)!;
   pubsub.publish(TOPICS.COUNTDOWN_UPDATED, { countdownUpdated: round });
   return round;
 }
 
-export function restoreActiveRoundCountdown() {
+export function restoreActiveRoundCountdown(): void {
   const active = getActiveRound();
   if (active) {
     chatMonitor.scheduleCountdownEnd(active);

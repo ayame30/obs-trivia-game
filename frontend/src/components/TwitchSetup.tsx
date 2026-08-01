@@ -1,8 +1,14 @@
 import { useMutation, useQuery } from '@apollo/client/react';
 import { GET_TWITCH_CONFIG, SET_TWITCH_TOKEN, RECONNECT_TWITCH } from '../graphql/operations';
+import type { GetTwitchConfigData } from '../types';
 
-export default function TwitchSetup({ accessToken, channel }) {
-  const { data, refetch } = useQuery(GET_TWITCH_CONFIG);
+interface TwitchSetupProps {
+  accessToken: string;
+  channel: string;
+}
+
+export default function TwitchSetup({ accessToken, channel }: TwitchSetupProps) {
+  const { data, refetch } = useQuery<GetTwitchConfigData>(GET_TWITCH_CONFIG);
   const [setToken, { loading, error }] = useMutation(SET_TWITCH_TOKEN, {
     onCompleted: () => refetch(),
   });
@@ -39,7 +45,12 @@ export default function TwitchSetup({ accessToken, channel }) {
             {loading ? 'Saving…' : config?.hasToken ? 'Update token' : 'Connect Twitch chat'}
           </button>
           {config?.hasToken && (
-            <button type="button" className="secondary" disabled={reconnecting} onClick={() => reconnect()}>
+            <button
+              type="button"
+              className="secondary"
+              disabled={reconnecting}
+              onClick={() => reconnect()}
+            >
               Reconnect IRC
             </button>
           )}

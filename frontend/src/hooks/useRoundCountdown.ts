@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
+import type { Round } from '../types';
 
-export function useRoundCountdown(round) {
+export function useRoundCountdown(round: Round | null | undefined): number {
   const [remaining, setRemaining] = useState(0);
 
   useEffect(() => {

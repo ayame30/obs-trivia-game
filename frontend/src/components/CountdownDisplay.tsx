@@ -1,6 +1,12 @@
 import { useRoundCountdown } from '../hooks/useRoundCountdown';
+import type { Round } from '../types';
 
-export default function CountdownDisplay({ round, variant = 'default' }) {
+interface CountdownDisplayProps {
+  round: Round | null | undefined;
+  variant?: 'default' | 'overlay';
+}
+
+export default function CountdownDisplay({ round, variant = 'default' }: CountdownDisplayProps) {
   const remaining = useRoundCountdown(round);
   const active = round?.status === 'active';
   const paused = round?.countdownPaused;

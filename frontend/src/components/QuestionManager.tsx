@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useQuery, useMutation } from '@apollo/client/react';
 import {
   GET_QUESTIONS,
@@ -10,8 +10,9 @@ import {
   PAUSE_COUNTDOWN,
   RESUME_COUNTDOWN,
 } from '../graphql/operations';
+import type { AnswerChoice, Question, QuestionFormState, Round, GetQuestionsData, StartQuestionMutation, StopQuestionMutation, PauseCountdownMutation, ResumeCountdownMutation } from '../types';
 
-const emptyForm = {
+const emptyForm: QuestionFormState = {
   text: '',
   optionA: '',
   optionB: '',
@@ -21,11 +22,16 @@ const emptyForm = {
   countdownSeconds: 30,
 };
 
-export default function QuestionManager({ activeRound, onRoundChange }) {
-  const [form, setForm] = useState(emptyForm);
-  const [editingId, setEditingId] = useState(null);
+interface QuestionManagerProps {
+  activeRound: Round | null | undefined;
+  onRoundChange?: (round: Round | null) => void;
+}
 
-  const { data, loading, refetch } = useQuery(GET_QUESTIONS);
+export default function QuestionManager({ activeRound, onRoundChange }: QuestionManagerProps) {
+  const [form, setForm] = useState<QuestionFormState>(emptyForm);
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  const { data, loading, refetch } = useQuery<GetQuestionsData>(GET_QUESTIONS);
   const [createQuestion, { loading: creating }] = useMutation(CREATE_QUESTION, {
     onCompleted: () => {
       setForm(emptyForm);
@@ -40,24 +46,24 @@ export default function QuestionManager({ activeRound, onRoundChange }) {
     },
   });
   const [deleteQuestion] = useMutation(DELETE_QUESTION, { onCompleted: () => refetch() });
-  const [startQuestion, { loading: starting }] = useMutation(START_QUESTION, {
+  const [startQuestion, { loading: starting }] = useMutation<StartQuestionMutation>(START_QUESTION, {
     onCompleted: (res) => onRoundChange?.(res.startQuestion),
   });
-  const [stopQuestion, { loading: stopping }] = useMutation(STOP_QUESTION, {
+  const [stopQuestion, { loading: stopping }] = useMutation<StopQuestionMutation>(STOP_QUESTION, {
     onCompleted: (res) => onRoundChange?.(res.stopQuestion),
   });
-  const [pauseCountdown, { loading: pausing }] = useMutation(PAUSE_COUNTDOWN, {
+  const [pauseCountdown, { loading: pausing }] = useMutation<PauseCountdownMutation>(PAUSE_COUNTDOWN, {
     onCompleted: (res) => onRoundChange?.(res.pauseCountdown),
   });
-  const [resumeCountdown, { loading: resuming }] = useMutation(RESUME_COUNTDOWN, {
+  const [resumeCountdown, { loading: resuming }] = useMutation<ResumeCountdownMutation>(RESUME_COUNTDOWN, {
     onCompleted: (res) => onRoundChange?.(res.resumeCountdown),
   });
 
-  const questions = data?.questions ?? [];
+  const questions: Question[] = data?.questions ?? [];
   const hasActive = activeRound?.status === 'active';
   const countdownPaused = activeRound?.countdownPaused;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     const input = {
       text: form.text.trim(),
@@ -75,7 +81,7 @@ export default function QuestionManager({ activeRound, onRoundChange }) {
     }
   };
 
-  const startEdit = (q) => {
+  const startEdit = (q: Question) => {
     setEditingId(q.id);
     setForm({
       text: q.text,
@@ -88,6 +94,8 @@ export default function QuestionManager({ activeRound, onRoundChange }) {
     });
   };
 
+  const optionKeys = ['optionA', 'optionB', 'optionC', 'optionD'] as const;
+
   return (
     <div className="card">
       <h2>Question bank</h2>
@@ -95,20 +103,35 @@ export default function QuestionManager({ activeRound, onRoundChange }) {
       <form className="form-grid" onSubmit={handleSubmit}>
         <div>
           <label>Question</label>
-          <textarea rows={2} value={form.text} onChange={(e) => setForm({ ...form, text: e.target.value })} required />
+          <textarea
+            rows={2}
+            value={form.text}
+            onChange={(e) => setForm({ ...form, text: e.target.value })}
+            required
+          />
         </div>
         <div className="grid-2">
-          {['optionA', 'optionB', 'optionC', 'optionD'].map((key, i) => (
+          {optionKeys.map((key, i) => (
             <div key={key}>
               <label>Option {String.fromCharCode(65 + i)}</label>
-              <textarea rows={2} value={form[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })} required />
+              <textarea
+                rows={2}
+                value={form[key]}
+                onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                required
+              />
             </div>
           ))}
         </div>
         <div className="grid-2">
           <div>
             <label>Correct answer</label>
-            <select value={form.correctAnswer} onChange={(e) => setForm({ ...form, correctAnswer: e.target.value })}>
+            <select
+              value={form.correctAnswer}
+              onChange={(e) =>
+                setForm({ ...form, correctAnswer: e.target.value as AnswerChoice })
+              }
+            >
               <option value="A">A</option>
               <option value="B">B</option>
               <option value="C">C</option>

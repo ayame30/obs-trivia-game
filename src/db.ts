@@ -2,6 +2,22 @@ import { DatabaseSync } from 'node:sqlite';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import type {
+  AnswerChoice,
+  CreateQuestionInput,
+  Question,
+  QuestionRow,
+  RecordVoteResult,
+  Round,
+  RoundRow,
+  ScoreboardEntry,
+  ScoreboardRow,
+  ScoreboardUpdateInput,
+  TwitchConfig,
+  TwitchConfigRow,
+  UpdateQuestionInput,
+  VoteCounts,
+} from './types.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const defaultDbPath = path.join(__dirname, '..', 'data', 'stream-trivia.db');
@@ -61,8 +77,8 @@ db.exec(`
   );
 `);
 
-function ensureColumn(table, column, definition) {
-  const columns = db.prepare(`PRAGMA table_info(${table})`).all();
+function ensureColumn(table: string, column: string, definition: string): void {
+  const columns = db.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>;
   if (!columns.some((col) => col.name === column)) {
     db.exec(`ALTER TABLE ${table} ADD COLUMN ${definition}`);
   }
@@ -78,13 +94,13 @@ const DEFAULT_COUNTDOWN_SECONDS = 30;
 const MIN_COUNTDOWN_SECONDS = 5;
 const MAX_COUNTDOWN_SECONDS = 600;
 
-function clampCountdownSeconds(value) {
+function clampCountdownSeconds(value: unknown): number {
   const seconds = Number(value);
   if (!Number.isFinite(seconds)) return DEFAULT_COUNTDOWN_SECONDS;
   return Math.min(MAX_COUNTDOWN_SECONDS, Math.max(MIN_COUNTDOWN_SECONDS, Math.round(seconds)));
 }
 
-export function getCountdownRemainingSeconds(row) {
+export function getCountdownRemainingSeconds(row: RoundRow | null | undefined): number {
   if (!row || row.status !== 'active') return 0;
   if (row.countdown_paused) {
     return Math.max(0, Math.ceil((row.countdown_remaining_ms ?? 0) / 1000));
@@ -96,7 +112,7 @@ export function getCountdownRemainingSeconds(row) {
   return Math.max(0, Math.ceil((endMs - Date.now()) / 1000));
 }
 
-export function isRoundAcceptingVotes(row) {
+export function isRoundAcceptingVotes(row: RoundRow | null | undefined): boolean {
   if (!row || row.status !== 'active') return false;
   return getCountdownRemainingSeconds(row) > 0;
 }
@@ -110,23 +126,24 @@ const activeRoundStmt = db.prepare(`
   LIMIT 1
 `);
 
-export function getQuestions() {
-  return db.prepare('SELECT * FROM questions ORDER BY id ASC').all();
+export function getQuestions(): QuestionRow[] {
+  return db.prepare('SELECT * FROM questions ORDER BY id ASC').all() as unknown as QuestionRow[];
 }
 
-export function getQuestion(id) {
-  return db.prepare('SELECT * FROM questions WHERE id = ?').get(id);
+export function getQuestion(id: number | string): QuestionRow | undefined {
+  return db.prepare('SELECT * FROM questions WHERE id = ?').get(id) as QuestionRow | undefined;
 }
 
-export function createQuestion({
-  text,
-  optionA,
-  optionB,
-  optionC,
-  optionD,
-  correctAnswer,
-  countdownSeconds,
-}) {
+export function createQuestion(input: CreateQuestionInput): QuestionRow | undefined {
+  const {
+    text,
+    optionA,
+    optionB,
+    optionC,
+    optionD,
+    correctAnswer,
+    countdownSeconds,
+  } = input;
   const seconds = clampCountdownSeconds(countdownSeconds ?? DEFAULT_COUNTDOWN_SECONDS);
   const result = db
     .prepare(
@@ -137,7 +154,10 @@ export function createQuestion({
   return getQuestion(Number(result.lastInsertRowid));
 }
 
-export function updateQuestion(id, fields) {
+export function updateQuestion(
+  id: number,
+  fields: UpdateQuestionInput
+): QuestionRow | null {
   const existing = getQuestion(id);
   if (!existing) return null;
   db.prepare(
@@ -162,19 +182,29 @@ export function updateQuestion(id, fields) {
       : existing.countdown_seconds,
     id
   );
-  return getQuestion(id);
+  return getQuestion(id) ?? null;
 }
 
-export function deleteQuestion(id) {
+export function deleteQuestion(id: number): boolean {
   const result = db.prepare('DELETE FROM questions WHERE id = ?').run(id);
   return Number(result.changes) > 0;
 }
 
-export function getTwitchConfig() {
-  return db.prepare('SELECT * FROM twitch_config WHERE id = 1').get();
+export function getTwitchConfig(): TwitchConfigRow | undefined {
+  return db.prepare('SELECT * FROM twitch_config WHERE id = 1').get() as TwitchConfigRow | undefined;
 }
 
-export function setTwitchConfig({ accessToken, login, userId, channel }) {
+export function setTwitchConfig({
+  accessToken,
+  login,
+  userId,
+  channel,
+}: {
+  accessToken: string;
+  login: string;
+  userId: string;
+  channel: string;
+}): TwitchConfigRow | undefined {
   db.prepare(
     `INSERT INTO twitch_config (id, access_token, login, user_id, channel, updated_at)
      VALUES (1, ?, ?, ?, ?, datetime('now'))
@@ -188,11 +218,11 @@ export function setTwitchConfig({ accessToken, login, userId, channel }) {
   return getTwitchConfig();
 }
 
-export function getActiveRound() {
-  return activeRoundStmt.get();
+export function getActiveRound(): RoundRow | undefined {
+  return activeRoundStmt.get() as RoundRow | undefined;
 }
 
-export function startRound(questionId) {
+export function startRound(questionId: number): RoundRow | undefined {
   const existing = getActiveRound();
   if (existing) {
     throw new Error('A question round is already active. Stop it before starting another.');
@@ -212,7 +242,7 @@ export function startRound(questionId) {
   return getRound(Number(result.lastInsertRowid));
 }
 
-export function getRound(id) {
+export function getRound(id: number): RoundRow | undefined {
   return db
     .prepare(
       `SELECT r.*, q.text, q.option_a, q.option_b, q.option_c, q.option_d, q.correct_answer, q.countdown_seconds AS question_countdown_seconds
@@ -220,10 +250,10 @@ export function getRound(id) {
        JOIN questions q ON q.id = r.question_id
        WHERE r.id = ?`
     )
-    .get(id);
+    .get(id) as RoundRow | undefined;
 }
 
-export function pauseCountdown(roundId) {
+export function pauseCountdown(roundId: number): RoundRow | undefined {
   const round = getRound(roundId);
   if (!round || round.status !== 'active') {
     throw new Error('No active round to pause');
@@ -231,7 +261,7 @@ export function pauseCountdown(roundId) {
   if (round.countdown_paused) {
     return round;
   }
-  const remainingMs = Math.max(0, new Date(round.countdown_ends_at).getTime() - Date.now());
+  const remainingMs = Math.max(0, new Date(round.countdown_ends_at!).getTime() - Date.now());
   db.prepare(
     `UPDATE rounds
      SET countdown_paused = 1,
@@ -242,7 +272,7 @@ export function pauseCountdown(roundId) {
   return getRound(roundId);
 }
 
-export function resumeCountdown(roundId) {
+export function resumeCountdown(roundId: number): RoundRow | undefined {
   const round = getRound(roundId);
   if (!round || round.status !== 'active') {
     throw new Error('No active round to resume');
@@ -262,7 +292,7 @@ export function resumeCountdown(roundId) {
   return getRound(roundId);
 }
 
-export function stopRound(roundId) {
+export function stopRound(roundId: number): RoundRow | undefined {
   const round = getRound(roundId);
   if (!round || round.status !== 'active') {
     throw new Error('No active round to stop');
@@ -274,7 +304,7 @@ export function stopRound(roundId) {
   const correct = round.correct_answer;
   const voters = db
     .prepare('SELECT * FROM votes WHERE round_id = ? AND answer = ?')
-    .all(roundId, correct);
+    .all(roundId, correct) as Array<{ twitch_user_id: string; display_name: string }>;
 
   const upsertScore = db.prepare(
     `INSERT INTO scoreboard (twitch_user_id, display_name, score, updated_at)
@@ -292,7 +322,17 @@ export function stopRound(roundId) {
   return getRound(roundId);
 }
 
-export function recordVote({ roundId, twitchUserId, displayName, answer }) {
+export function recordVote({
+  roundId,
+  twitchUserId,
+  displayName,
+  answer,
+}: {
+  roundId: number;
+  twitchUserId: string;
+  displayName: string;
+  answer: AnswerChoice;
+}): RecordVoteResult | null {
   const round = getRound(roundId);
   if (!round || round.status !== 'active' || !isRoundAcceptingVotes(round)) {
     return null;
@@ -304,20 +344,21 @@ export function recordVote({ roundId, twitchUserId, displayName, answer }) {
     ).run(roundId, twitchUserId, displayName, answer);
     return { roundId, twitchUserId, displayName, answer, isNew: true };
   } catch (err) {
-    if (err.code === 'SQLITE_CONSTRAINT_UNIQUE' || err.code === 'SQLITE_CONSTRAINT') {
+    const code = (err as { code?: string }).code;
+    if (code === 'SQLITE_CONSTRAINT_UNIQUE' || code === 'SQLITE_CONSTRAINT') {
       return null;
     }
     return null;
   }
 }
 
-export function getVoteCounts(roundId) {
+export function getVoteCounts(roundId: number): VoteCounts {
   const rows = db
     .prepare(
       `SELECT answer, COUNT(*) as count FROM votes WHERE round_id = ? GROUP BY answer`
     )
-    .all(roundId);
-  const counts = { A: 0, B: 0, C: 0, D: 0, total: 0 };
+    .all(roundId) as Array<{ answer: AnswerChoice; count: number }>;
+  const counts: VoteCounts = { A: 0, B: 0, C: 0, D: 0, total: 0 };
   for (const row of rows) {
     counts[row.answer] = row.count;
     counts.total += row.count;
@@ -325,22 +366,18 @@ export function getVoteCounts(roundId) {
   return counts;
 }
 
-export function getScoreboard() {
+export function getScoreboard(): ScoreboardRow[] {
   return db
     .prepare('SELECT * FROM scoreboard ORDER BY score DESC, display_name ASC')
-    .all();
+    .all() as unknown as ScoreboardRow[];
 }
 
-export function resetScoreboard() {
+export function resetScoreboard(): ScoreboardRow[] {
   db.prepare('DELETE FROM scoreboard').run();
   return [];
 }
 
-/**
- * Batch update existing scoreboard rows only. Each item must include exactly one of
- * `score` (absolute) or `delta` (relative). Unknown twitchUserId values are rejected.
- */
-export function batchUpdateScoreboard(updates) {
+export function batchUpdateScoreboard(updates: ScoreboardUpdateInput[]): ScoreboardRow[] {
   if (!updates?.length) {
     return getScoreboard();
   }
@@ -354,7 +391,7 @@ export function batchUpdateScoreboard(updates) {
      WHERE twitch_user_id = ?`
   );
 
-  const apply = (items) => {
+  const apply = (items: ScoreboardUpdateInput[]) => {
     db.exec('BEGIN IMMEDIATE');
     try {
       for (const item of items) {
@@ -368,16 +405,16 @@ export function batchUpdateScoreboard(updates) {
           );
         }
 
-        const existing = getEntry.get(twitchUserId);
+        const existing = getEntry.get(twitchUserId) as ScoreboardRow | undefined;
         if (!existing) {
           throw new Error(`Scoreboard entry not found (${twitchUserId})`);
         }
 
         if (hasScore) {
-          setScore.run(Math.max(0, Math.round(score)), displayName ?? null, twitchUserId);
+          setScore.run(Math.max(0, Math.round(score!)), displayName ?? null, twitchUserId);
         } else {
           setScore.run(
-            Math.max(0, existing.score + Math.round(delta)),
+            Math.max(0, existing.score + Math.round(delta!)),
             displayName ?? null,
             twitchUserId
           );
@@ -394,15 +431,14 @@ export function batchUpdateScoreboard(updates) {
   return getScoreboard();
 }
 
-/** Clear all rounds/votes and reset round id counter so the next round is #1. */
-export function resetRounds() {
+export function resetRounds(): boolean {
   db.exec('DELETE FROM votes');
   db.exec('DELETE FROM rounds');
   db.exec("DELETE FROM sqlite_sequence WHERE name = 'rounds'");
   return true;
 }
 
-export function mapQuestion(row) {
+export function mapQuestion(row: QuestionRow | null | undefined): Question | null {
   if (!row) return null;
   return {
     id: String(row.id),
@@ -417,9 +453,12 @@ export function mapQuestion(row) {
   };
 }
 
-export function mapRound(row, { revealAnswer = false } = {}) {
+export function mapRound(
+  row: RoundRow | null | undefined,
+  { revealAnswer = false }: { revealAnswer?: boolean } = {}
+): Round | null {
   if (!row) return null;
-  const question = {
+  const question: Question = {
     id: String(row.question_id),
     text: row.text,
     optionA: row.option_a,
@@ -427,7 +466,8 @@ export function mapRound(row, { revealAnswer = false } = {}) {
     optionC: row.option_c,
     optionD: row.option_d,
     correctAnswer: revealAnswer || row.status === 'ended' ? row.correct_answer : null,
-    countdownSeconds: row.question_countdown_seconds ?? row.countdown_seconds ?? DEFAULT_COUNTDOWN_SECONDS,
+    countdownSeconds:
+      row.question_countdown_seconds ?? row.countdown_seconds ?? DEFAULT_COUNTDOWN_SECONDS,
     createdAt: null,
   };
   return {
@@ -445,7 +485,7 @@ export function mapRound(row, { revealAnswer = false } = {}) {
   };
 }
 
-export function mapTwitchConfig(row) {
+export function mapTwitchConfig(row: TwitchConfigRow | null | undefined): TwitchConfig | null {
   if (!row) return null;
   return {
     login: row.login,
@@ -456,7 +496,7 @@ export function mapTwitchConfig(row) {
   };
 }
 
-export function mapScoreboardEntry(row) {
+export function mapScoreboardEntry(row: ScoreboardRow): ScoreboardEntry {
   return {
     twitchUserId: row.twitch_user_id,
     displayName: row.display_name,
@@ -464,8 +504,10 @@ export function mapScoreboardEntry(row) {
   };
 }
 
-export function getTwitchAccessToken() {
-  const row = db.prepare('SELECT access_token FROM twitch_config WHERE id = 1').get();
+export function getTwitchAccessToken(): string | null {
+  const row = db.prepare('SELECT access_token FROM twitch_config WHERE id = 1').get() as
+    | { access_token: string }
+    | undefined;
   return row?.access_token ?? null;
 }
 

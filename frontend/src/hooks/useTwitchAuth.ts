@@ -1,24 +1,25 @@
 import { useEffect, useState } from 'react';
+import type { TwitchStoredAuth } from '../types';
 
 const STORAGE_KEY = 'stream_trivia_twitch';
 
-function readHashToken() {
+function readHashToken(): string | null {
   const hash = window.location.hash.replace('#', '');
   if (!hash) return null;
   const params = new URLSearchParams(hash.startsWith('/') ? hash.slice(1) : hash);
   return params.get('access_token');
 }
 
-function loadStored() {
+function loadStored(): TwitchStoredAuth | null {
   try {
     const raw = sessionStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : null;
+    return raw ? (JSON.parse(raw) as TwitchStoredAuth) : null;
   } catch {
     return null;
   }
 }
 
-function saveStored(data) {
+function saveStored(data: TwitchStoredAuth): void {
   sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
@@ -46,7 +47,7 @@ export function useTwitchAuth() {
       .then((res) => {
         console.log(res);
         if (!res.ok) throw new Error('Invalid token');
-        return res.json();
+        return res.json() as Promise<{ login: string; user_id: string }>;
       })
       .then((user) => {
         setLogin(user.login);
