@@ -33,6 +33,8 @@ export class TwitchChatMonitorService implements OnModuleInit {
   private chatLog: ChatLogEntry[] = [];
   private chatLogRoundId: number | null = null;
   private deadlineSentForRoundId: number | null = null;
+  /** Bumps on each connect/disconnect so stale socket handlers are ignored. */
+  private connectionGeneration = 0;
 
   constructor(
     private readonly twitchConfigService: TwitchConfigService,
@@ -50,55 +52,80 @@ export class TwitchChatMonitorService implements OnModuleInit {
     }
   }
 
-  async connect(): Promise<boolean> {
-    const token = await this.twitchConfigService.getAccessToken();
+  /**
+   * Connect (or reconnect) to Twitch IRC.
+   * Pass credentials explicitly after a token update so the new token is used immediately.
+   */
+  async connect(credentials?: {
+    accessToken: string;
+    login: string;
+    channel?: string;
+  }): Promise<boolean> {
     const config = await this.twitchConfigService.findOne();
-    if (!token || !config) {
+    const token = credentials?.accessToken ?? (await this.twitchConfigService.getAccessToken());
+    const login = credentials?.login ?? config?.login;
+    const channel = (credentials?.channel ?? config?.channel ?? login ?? '')
+      .replace(/^#/, '')
+      .toLowerCase();
+
+    if (!token || !login || !channel) {
       console.log('[twitch] No token configured, chat monitor idle');
+      this.disconnect();
       return false;
     }
 
     this.disconnect();
-    const login = config.login;
-    this.channelName = (config.channel || login).toLowerCase();
+    const generation = ++this.connectionGeneration;
+    this.channelName = channel;
 
     return new Promise((resolve) => {
-      this.ws = new WebSocket(TWITCH_IRC);
+      const ws = new WebSocket(TWITCH_IRC);
+      this.ws = ws;
 
-      this.ws.on('open', () => {
-        this.ws!.send('CAP REQ :twitch.tv/tags twitch.tv/commands');
-        this.ws!.send(`PASS oauth:${token}`);
-        this.ws!.send(`NICK ${login}`);
-        this.ws!.send(`JOIN #${this.channelName}`);
+      const isCurrent = () => generation === this.connectionGeneration && this.ws === ws;
+
+      ws.on('open', () => {
+        if (!isCurrent()) {
+          ws.close();
+          resolve(false);
+          return;
+        }
+        ws.send('CAP REQ :twitch.tv/tags twitch.tv/commands');
+        ws.send(`PASS oauth:${token}`);
+        ws.send(`NICK ${login}`);
+        ws.send(`JOIN #${channel}`);
         this.connected = true;
-        console.log(`[twitch] Connected to #${this.channelName}`);
+        console.log(`[twitch] Connected to #${channel} as ${login}`);
         void this.roundsService.findActive().then((active) => {
-          if (active) {
-            if (this.chatLogRoundId !== active.id) {
-              this.resetChatLog(active.id);
-            }
-            this.scheduleCountdownEnd(active);
+          if (!isCurrent() || !active) return;
+          if (this.chatLogRoundId !== active.id) {
+            this.resetChatLog(active.id);
           }
+          this.scheduleCountdownEnd(active);
         });
         resolve(true);
       });
 
-      this.ws.on('message', (data) => {
+      ws.on('message', (data) => {
+        if (!isCurrent()) return;
         const raw = data.toString();
         if (raw.includes('PING :tmi.twitch.tv')) {
-          this.ws!.send('PONG :tmi.twitch.tv');
+          ws.send('PONG :tmi.twitch.tv');
           return;
         }
         void this.handleMessage(raw);
       });
 
-      this.ws.on('close', () => {
+      ws.on('close', () => {
+        if (!isCurrent()) return;
         this.connected = false;
+        this.ws = null;
         console.log('[twitch] Disconnected, reconnecting in 10s');
         this.scheduleReconnect();
       });
 
-      this.ws.on('error', (err: Error) => {
+      ws.on('error', (err: Error) => {
+        if (!isCurrent()) return;
         console.error('[twitch] WebSocket error:', err.message);
       });
     });
@@ -152,15 +179,21 @@ export class TwitchChatMonitorService implements OnModuleInit {
   }
 
   disconnect(): void {
+    this.connectionGeneration += 1;
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
     }
     this.clearCountdownTimer();
     if (this.ws) {
-      this.ws.removeAllListeners();
-      this.ws.close();
+      const ws = this.ws;
       this.ws = null;
+      ws.removeAllListeners();
+      try {
+        ws.close();
+      } catch {
+        // ignore close errors on teardown
+      }
     }
     this.connected = false;
     this.channelName = null;
@@ -228,7 +261,7 @@ export class TwitchChatMonitorService implements OnModuleInit {
     this.logChatLogBeforeDeadline(round.id);
     const settings = await this.settingsService.getSettings();
     if (!settings.showCutoffChat) return;
-    this.sendChatMessage(formatQuestionForChat(round, settings.cutoffChatMessage));
+    this.sendChatMessage(settings.cutoffChatMessage);
   }
 
   private scheduleCountdownEnd(round: Round | null | undefined): void {
@@ -243,7 +276,7 @@ export class TwitchChatMonitorService implements OnModuleInit {
       void this.roundsService.findOne(roundId).then((active) => {
         if (!active || active.id !== roundId || active.status !== 'active') return;
         if (active.countdownPaused) return;
-        void this.sendDeadlineIfNeeded(round);
+        void this.sendDeadlineIfNeeded(active);
       });
     }, delayMs);
   }

@@ -114,16 +114,21 @@ export class TriviaResolver {
   ) {
     const user = await this.twitchOAuthService.validateToken(accessToken);
     const login = user.login;
+    const channelName = (channel || login).replace(/^#/, '').toLowerCase();
     const config = await this.twitchConfigService.setConfig({
       accessToken,
       login,
       userId: String(user.user_id),
-      channel: (channel || login).replace(/^#/, '').toLowerCase(),
+      channel: channelName,
     });
-    await this.chatMonitor.connect();
+    const connected = await this.chatMonitor.connect({
+      accessToken,
+      login,
+      channel: channelName,
+    });
     return {
-      ...config,
-      chatConnected: this.chatMonitor.isConnected(),
+      ...config!,
+      chatConnected: connected,
     };
   }
 
