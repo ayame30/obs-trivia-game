@@ -111,6 +111,9 @@ export class TwitchConfigModel {
 
   @Field()
   hasToken!: boolean;
+
+  @Field()
+  chatConnected!: boolean;
 }
 
 @ObjectType('ScoreboardEntry')

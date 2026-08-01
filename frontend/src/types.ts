@@ -49,6 +49,7 @@ export interface TwitchConfig {
   channel: string;
   updatedAt: string;
   hasToken: boolean;
+  chatConnected: boolean;
 }
 
 export interface TwitchStoredAuth {

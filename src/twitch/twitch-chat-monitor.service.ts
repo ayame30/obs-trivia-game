@@ -107,6 +107,18 @@ export class TwitchChatMonitorService implements OnModuleInit {
     return this.connected;
   }
 
+  sendMessage(text: string): boolean {
+    const trimmed = text.trim();
+    if (!trimmed) {
+      throw new Error('Message cannot be empty');
+    }
+    const sent = this.sendChatMessage(trimmed);
+    if (!sent) {
+      throw new Error('Twitch chat is not connected');
+    }
+    return true;
+  }
+
   onQuestionStarted(round: Round): void {
     this.deadlineSentForRoundId = null;
     this.resetChatLog(round.id);

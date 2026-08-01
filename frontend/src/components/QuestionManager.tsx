@@ -47,9 +47,10 @@ function blockExtraRows(
 interface QuestionManagerProps {
   activeRound: Round | null | undefined;
   onRoundChange?: (round: Round | null) => void;
+  embedded?: boolean;
 }
 
-export default function QuestionManager({ activeRound, onRoundChange }: QuestionManagerProps) {
+export default function QuestionManager({ activeRound, onRoundChange, embedded }: QuestionManagerProps) {
   const [form, setForm] = useState<QuestionFormState>(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -118,9 +119,9 @@ export default function QuestionManager({ activeRound, onRoundChange }: Question
 
   const optionKeys = ['optionA', 'optionB', 'optionC', 'optionD'] as const;
 
-  return (
-    <div className="card">
-      <h2>Question bank</h2>
+  const content = (
+    <>
+      {!embedded ? <h2>Question bank</h2> : null}
 
       <form className="form-grid" onSubmit={handleSubmit}>
         <div>
@@ -271,6 +272,12 @@ export default function QuestionManager({ activeRound, onRoundChange }: Question
           </button>
         </div>
       )}
-    </div>
+    </>
   );
+
+  if (embedded) {
+    return <div className="question-manager--embedded">{content}</div>;
+  }
+
+  return <div className="card">{content}</div>;
 }

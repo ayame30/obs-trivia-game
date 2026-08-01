@@ -61,8 +61,13 @@ export class TriviaResolver {
   }
 
   @Query(() => TwitchConfigModel, { nullable: true })
-  twitchConfig() {
-    return this.twitchConfigService.getConfig();
+  async twitchConfig() {
+    const config = await this.twitchConfigService.getConfig();
+    if (!config) return null;
+    return {
+      ...config,
+      chatConnected: this.chatMonitor.isConnected(),
+    };
   }
 
   @Query(() => [ScoreboardEntryModel])
@@ -102,7 +107,10 @@ export class TriviaResolver {
       channel: (channel || login).replace(/^#/, '').toLowerCase(),
     });
     await this.chatMonitor.connect();
-    return config;
+    return {
+      ...config,
+      chatConnected: this.chatMonitor.isConnected(),
+    };
   }
 
   @Mutation(() => RoundModel)
@@ -163,6 +171,11 @@ export class TriviaResolver {
   @Mutation(() => Boolean)
   reconnectTwitchChat() {
     return this.chatMonitor.connect();
+  }
+
+  @Mutation(() => Boolean)
+  sendTwitchChatMessage(@Args('message') message: string) {
+    return this.chatMonitor.sendMessage(message);
   }
 
   @Subscription(() => RoundModel)

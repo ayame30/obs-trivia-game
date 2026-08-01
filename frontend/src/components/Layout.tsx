@@ -7,7 +7,7 @@ export default function Layout() {
         <div>
           <h1 style={{ margin: 0, fontSize: '1.35rem' }}>Stream Trivia</h1>
           <p style={{ margin: '0.25rem 0 0', color: 'var(--muted)', fontSize: '0.85rem' }}>
-            GraphQL subscriptions · Twitch chat ABCD votes
+            Setup · Twitch chat · OBS overlays
           </p>
         </div>
         <nav>

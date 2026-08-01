@@ -72,6 +72,7 @@ export const GET_TWITCH_CONFIG = gql`
       channel
       updatedAt
       hasToken
+      chatConnected
     }
   }
 `;
@@ -117,6 +118,7 @@ export const SET_TWITCH_TOKEN = gql`
       userId
       channel
       hasToken
+      chatConnected
     }
   }
 `;
@@ -192,6 +194,12 @@ export const ROUNDS_RESET = gql`
 export const RECONNECT_TWITCH = gql`
   mutation ReconnectTwitchChat {
     reconnectTwitchChat
+  }
+`;
+
+export const SEND_TWITCH_CHAT_MESSAGE = gql`
+  mutation SendTwitchChatMessage($message: String!) {
+    sendTwitchChatMessage(message: $message)
   }
 `;
 

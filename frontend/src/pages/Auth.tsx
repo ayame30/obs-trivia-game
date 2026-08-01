@@ -1,14 +1,12 @@
 import { Link } from 'react-router-dom';
 import { useTwitchAuth } from '../hooks/useTwitchAuth';
-
-const SCOPES = ['openid', 'chat:read', 'chat:edit'].join(' ');
+import { getTwitchClientId, getTwitchOAuthUrl } from '../lib/twitchOAuth';
 
 export default function Auth() {
   const { accessToken, login, userId, loading } = useTwitchAuth();
-  const clientId = import.meta.env.VITE_TWITCH_CLIENT_ID;
-  const redirectUri = encodeURIComponent(`${window.location.origin}/auth`);
+  const oauthUrl = getTwitchOAuthUrl('/auth');
 
-  if (!clientId || clientId === 'your_twitch_client_id') {
+  if (!getTwitchClientId()) {
     return (
       <div className="card">
         <p>
@@ -30,9 +28,7 @@ export default function Auth() {
         <p style={{ color: 'var(--muted)' }}>
           OAuth token is used to connect IRC chat for A/B/C/D votes.
         </p>
-        <a
-          href={`https://id.twitch.tv/oauth2/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=token&scope=${encodeURIComponent(SCOPES)}`}
-        >
+        <a href={oauthUrl ?? '#'} className="setup-step__oauth-link">
           Connect with Twitch
         </a>
       </div>
