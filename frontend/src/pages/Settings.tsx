@@ -17,10 +17,39 @@ const emptyForm: AppSettingsFormState = {
   overlayCustomCss: '',
 };
 
+/** MCP runs on the Nest API, not the Vite UI port. */
+function getMcpServerUrl(): string {
+  if (typeof window === 'undefined') {
+    return 'http://127.0.0.1:4000/mcp';
+  }
+  const pagePort = window.location.port;
+  const apiPort =
+    pagePort && pagePort !== '3001'
+      ? pagePort
+      : String(import.meta.env.VITE_API_PORT || '4000');
+  return `http://127.0.0.1:${apiPort}/mcp`;
+}
+
+function mcpConfigSnippet(mcpUrl: string): string {
+  return JSON.stringify(
+    {
+      mcpServers: {
+        'obs-trivia-game': {
+          url: mcpUrl,
+        },
+      },
+    },
+    null,
+    2
+  );
+}
+
 export default function Settings() {
   const { data, loading } = useQuery<GetAppSettingsData>(GET_APP_SETTINGS);
   const [form, setForm] = useState<AppSettingsFormState>(emptyForm);
   const [saved, setSaved] = useState(false);
+  const mcpUrl = getMcpServerUrl();
+  const mcpConfig = mcpConfigSnippet(mcpUrl);
 
   const [updateSettings, { loading: saving, error }] = useMutation<UpdateAppSettingsMutation>(
     UPDATE_APP_SETTINGS,
@@ -188,13 +217,7 @@ export default function Settings() {
           <p className="setup-step__hint">
             Optional: edit via your own chatbot — with the app running, add this Cursor MCP server:
           </p>
-          <pre className="settings-mcp-config">{`{
-  "mcpServers": {
-    "obs-trivia-game": {
-      "url": "http://127.0.0.1:4000/mcp"
-    }
-  }
-}`}</pre>
+          <pre className="settings-mcp-config">{mcpConfig}</pre>
           <p className="setup-step__hint">
             Details: <code>frontend/docs/overlay-css-mcp.md</code>
           </p>

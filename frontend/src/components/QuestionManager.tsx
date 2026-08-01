@@ -232,7 +232,6 @@ export default function QuestionManager({
 
   const isEditMode = mode === 'edit';
   const isStreamMode = mode === 'stream';
-  const activeOnPage = questions.some((q) => q.id === activeRound?.questionId);
 
   const content = (
     <>
@@ -405,8 +404,14 @@ export default function QuestionManager({
                                 type="button"
                                 className="question-table__btn question-table__btn--danger"
                                 aria-label="Delete"
-                                title="Delete"
+                                title={
+                                  isActiveQuestion
+                                    ? 'Cannot delete the active question'
+                                    : 'Delete'
+                                }
+                                disabled={isActiveQuestion}
                                 onClick={() => {
+                                  if (isActiveQuestion) return;
                                   if (window.confirm('Delete this question?')) {
                                     deleteQuestion({ variables: { id: q.id } });
                                   }
@@ -427,7 +432,7 @@ export default function QuestionManager({
         </>
       )}
 
-      {isStreamMode && hasActive && !activeOnPage ? (
+      {isStreamMode ? (
         <div className="question-manager__round-actions">
           {countdownPaused ? (
             <button

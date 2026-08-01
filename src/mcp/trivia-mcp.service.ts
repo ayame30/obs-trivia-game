@@ -4,6 +4,7 @@ import { AnswerChoice } from '../common/constants';
 import { QuestionsService } from '../questions/questions.service';
 import { SettingsService } from '../settings/settings.service';
 import { OVERLAY_CSS_STYLE_GUIDE, sanitizeOverlayCss } from './overlay-css-style-guide';
+import { QUESTION_WRITING_GUIDE } from './question-writing-guide';
 
 function textResult(text: string, isError = false) {
   return {
@@ -120,6 +121,16 @@ export class TriviaMcpService {
 
     // —— Question CRUD ——
     server.registerTool(
+      'get_question_writing_guide',
+      {
+        title: 'Question writing guide',
+        description:
+          'Layout rules for question/answer text on the OBS overlay (box sizes, 1–2 lines, when to use \\n). Read this before create_question or update_question.',
+      },
+      async () => textResult(QUESTION_WRITING_GUIDE)
+    );
+
+    server.registerTool(
       'list_questions',
       {
         title: 'List questions',
@@ -173,13 +184,30 @@ export class TriviaMcpService {
       {
         title: 'Create question',
         description:
-          'Creates a question in the bank. Options A–D and correctAnswer (A|B|C|D) are required. Optional countdownSeconds (5–600, default 30).',
+          'Creates a question. Max 2 lines per field (\\n allowed). Overlay fit boxes: question 768×80px, each answer 364×80px; font auto-scales — insert a line break when it keeps text larger/clearer. Prefer get_question_writing_guide first. correctAnswer A|B|C|D; optional countdownSeconds 5–600.',
         inputSchema: {
-          text: z.string().min(1).describe('Question text'),
-          optionA: z.string().min(1),
-          optionB: z.string().min(1),
-          optionC: z.string().min(1),
-          optionD: z.string().min(1),
+          text: z
+            .string()
+            .min(1)
+            .describe(
+              'Question text (max 2 lines). Fits in 768×80px with auto font size; use \\n if a break helps.'
+            ),
+          optionA: z
+            .string()
+            .min(1)
+            .describe('Option A (max 2 lines). Fits in 364×80px; use \\n if needed.'),
+          optionB: z
+            .string()
+            .min(1)
+            .describe('Option B (max 2 lines). Fits in 364×80px; use \\n if needed.'),
+          optionC: z
+            .string()
+            .min(1)
+            .describe('Option C (max 2 lines). Fits in 364×80px; use \\n if needed.'),
+          optionD: z
+            .string()
+            .min(1)
+            .describe('Option D (max 2 lines). Fits in 364×80px; use \\n if needed.'),
           correctAnswer: z.enum(['A', 'B', 'C', 'D']),
           countdownSeconds: z.number().int().min(5).max(600).optional(),
         },
@@ -218,14 +246,19 @@ export class TriviaMcpService {
       'update_question',
       {
         title: 'Update question',
-        description: 'Updates fields on an existing question. Only provided fields change.',
+        description:
+          'Updates fields on an existing question. Same 2-line / fit-box rules as create_question (question 768×80, answers 364×80). Only provided fields change.',
         inputSchema: {
           id: z.union([z.number().int().positive(), z.string()]).describe('Question id'),
-          text: z.string().min(1).optional(),
-          optionA: z.string().min(1).optional(),
-          optionB: z.string().min(1).optional(),
-          optionC: z.string().min(1).optional(),
-          optionD: z.string().min(1).optional(),
+          text: z
+            .string()
+            .min(1)
+            .optional()
+            .describe('Question text (max 2 lines, 768×80px fit box)'),
+          optionA: z.string().min(1).optional().describe('Option A (max 2 lines, 364×80px)'),
+          optionB: z.string().min(1).optional().describe('Option B (max 2 lines, 364×80px)'),
+          optionC: z.string().min(1).optional().describe('Option C (max 2 lines, 364×80px)'),
+          optionD: z.string().min(1).optional().describe('Option D (max 2 lines, 364×80px)'),
           correctAnswer: z.enum(['A', 'B', 'C', 'D']).optional(),
           countdownSeconds: z.number().int().min(5).max(600).optional(),
         },
@@ -280,7 +313,8 @@ export class TriviaMcpService {
       'delete_question',
       {
         title: 'Delete question',
-        description: 'Permanently deletes a question by id.',
+        description:
+          'Permanently deletes a question by id. Fails if that question is in an active round — stop/reveal the round first.',
         inputSchema: {
           id: z.union([z.number().int().positive(), z.string()]).describe('Question id'),
         },

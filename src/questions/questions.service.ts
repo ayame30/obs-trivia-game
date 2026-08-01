@@ -4,9 +4,11 @@ import { Repository } from 'typeorm';
 import {
   clampCountdownSeconds,
   DEFAULT_COUNTDOWN_SECONDS,
+  RoundStatus,
 } from '../common/constants';
 import { mapQuestionEntity } from '../common/mappers';
 import { Question } from '../entities/question.entity';
+import { Round } from '../entities/round.entity';
 import { AnswerChoice } from '../common/constants';
 
 export interface CreateQuestionInput {
@@ -33,7 +35,9 @@ export interface UpdateQuestionInput {
 export class QuestionsService {
   constructor(
     @InjectRepository(Question)
-    private readonly questionRepo: Repository<Question>
+    private readonly questionRepo: Repository<Question>,
+    @InjectRepository(Round)
+    private readonly roundRepo: Repository<Round>
   ) {}
 
   async findAll() {
@@ -102,6 +106,13 @@ export class QuestionsService {
   }
 
   async delete(id: number): Promise<boolean> {
+    const activeRound = await this.roundRepo.findOne({
+      where: { status: RoundStatus.active, questionId: id },
+    });
+    if (activeRound) {
+      throw new Error('Cannot delete the question that is currently in an active round.');
+    }
+
     const result = await this.questionRepo.delete(id);
     return (result.affected ?? 0) > 0;
   }
