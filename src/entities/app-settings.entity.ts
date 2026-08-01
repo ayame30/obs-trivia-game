@@ -6,33 +6,31 @@ export const DEFAULT_QUESTION_CHAT_TEMPLATE =
 export const DEFAULT_CUTOFF_CHAT_MESSAGE = '===== END =====';
 export const DEFAULT_SCORE_MULTIPLIER = 10;
 
+export const SETTINGS_KEYS = {
+  showQuestionChat: 'show_question_chat',
+  questionChatTemplate: 'question_chat_template',
+  showCutoffChat: 'show_cutoff_chat',
+  cutoffChatMessage: 'cutoff_chat_message',
+  scoreMultiplier: 'score_multiplier',
+} as const;
+
+export type SettingKey = (typeof SETTINGS_KEYS)[keyof typeof SETTINGS_KEYS];
+
+export const SETTINGS_DEFAULTS: Record<SettingKey, string> = {
+  [SETTINGS_KEYS.showQuestionChat]: 'true',
+  [SETTINGS_KEYS.questionChatTemplate]: DEFAULT_QUESTION_CHAT_TEMPLATE,
+  [SETTINGS_KEYS.showCutoffChat]: 'true',
+  [SETTINGS_KEYS.cutoffChatMessage]: DEFAULT_CUTOFF_CHAT_MESSAGE,
+  [SETTINGS_KEYS.scoreMultiplier]: String(DEFAULT_SCORE_MULTIPLIER),
+};
+
 @Entity('app_settings')
 export class AppSettings {
-  @PrimaryColumn({ type: 'integer' })
-  id!: number;
+  @PrimaryColumn({ type: 'text' })
+  key!: string;
 
-  @Column({ name: 'show_question_chat', type: 'boolean', default: true })
-  showQuestionChat!: boolean;
-
-  @Column({
-    name: 'question_chat_template',
-    type: 'text',
-    default: DEFAULT_QUESTION_CHAT_TEMPLATE,
-  })
-  questionChatTemplate!: string;
-
-  @Column({ name: 'show_cutoff_chat', type: 'boolean', default: true })
-  showCutoffChat!: boolean;
-
-  @Column({
-    name: 'cutoff_chat_message',
-    type: 'text',
-    default: DEFAULT_CUTOFF_CHAT_MESSAGE,
-  })
-  cutoffChatMessage!: string;
-
-  @Column({ name: 'score_multiplier', type: 'integer', default: DEFAULT_SCORE_MULTIPLIER })
-  scoreMultiplier!: number;
+  @Column({ type: 'text' })
+  value!: string;
 
   @UpdateDateColumn({ name: 'updated_at', type: 'text' })
   updatedAt!: Date;

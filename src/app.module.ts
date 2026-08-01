@@ -31,11 +31,12 @@ import { TwitchModule } from './twitch/twitch.module';
         );
         mkdirSync(dirname(database), { recursive: true });
         return {
-          type: 'sqljs',
+          type: 'sqljs' as const,
           location: database,
           autoSave: true,
           entities: [Question, Round, Vote, ScoreboardEntry, TwitchConfig, AppSettings],
-          synchronize: false,
+          // Create/update tables from entity definitions (no hand-written SQL)
+          synchronize: true,
         };
       },
     }),
