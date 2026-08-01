@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
+import { FaSave } from 'react-icons/fa';
 import { GET_APP_SETTINGS, UPDATE_APP_SETTINGS } from '../graphql/operations';
 import type {
   AppSettingsFormState,
@@ -96,30 +97,33 @@ export default function Settings() {
             />
             Enable
           </label>
-          <label htmlFor="question-chat-template">Message template</label>
-          <textarea
-            id="question-chat-template"
-            rows={6}
-            value={form.questionChatTemplate}
-            disabled={!form.showQuestionChat}
-            onChange={(e) => setForm({ ...form, questionChatTemplate: e.target.value })}
-            required={form.showQuestionChat}
-          />
-          <p className="setup-step__hint">
-            Placeholders:{' '}
-            <code>{'{{round}}'}</code> <code>{'{{question}}'}</code>{' '}
-            <code>{'{{answerA}}'}</code> <code>{'{{answerB}}'}</code>{' '}
-            <code>{'{{answerC}}'}</code> <code>{'{{answerD}}'}</code>{' '}
-            <code>{'{{countDownSecond}}'}</code>
-          </p>
-          <p className="setup-step__hint">
-            Default:{' '}
-            <code>
-              {
-                'Q{{round}}:  {{question}} A ) {{answerA}} B ) {{answerB}} C ) {{answerC}} D ) {{answerD}}'
-              }
-            </code>
-          </p>
+          {form.showQuestionChat ? (
+            <>
+              <label htmlFor="question-chat-template">Message template</label>
+              <textarea
+                id="question-chat-template"
+                rows={6}
+                value={form.questionChatTemplate}
+                onChange={(e) => setForm({ ...form, questionChatTemplate: e.target.value })}
+                required
+              />
+              <p className="setup-step__hint">
+                Placeholders:{' '}
+                <code>{'{{round}}'}</code> <code>{'{{question}}'}</code>{' '}
+                <code>{'{{answerA}}'}</code> <code>{'{{answerB}}'}</code>{' '}
+                <code>{'{{answerC}}'}</code> <code>{'{{answerD}}'}</code>{' '}
+                <code>{'{{countDownSecond}}'}</code>
+              </p>
+              <p className="setup-step__hint">
+                Default:{' '}
+                <code>
+                  {
+                    'Q{{round}}:  {{question}} A ) {{answerA}} B ) {{answerB}} C ) {{answerC}} D ) {{answerD}}'
+                  }
+                </code>
+              </p>
+            </>
+          ) : null}
         </section>
 
         <section className="settings-section">
@@ -132,15 +136,18 @@ export default function Settings() {
             />
             Enable
           </label>
-          <label htmlFor="cutoff-chat-message">Message template</label>
-          <textarea
-            id="cutoff-chat-message"
-            rows={2}
-            value={form.cutoffChatMessage}
-            disabled={!form.showCutoffChat}
-            onChange={(e) => setForm({ ...form, cutoffChatMessage: e.target.value })}
-            required={form.showCutoffChat}
-          />
+          {form.showCutoffChat ? (
+            <>
+              <label htmlFor="cutoff-chat-message">Message template</label>
+              <textarea
+                id="cutoff-chat-message"
+                rows={2}
+                value={form.cutoffChatMessage}
+                onChange={(e) => setForm({ ...form, cutoffChatMessage: e.target.value })}
+                required
+              />
+            </>
+          ) : null}
         </section>
 
         <section className="settings-section">
@@ -168,6 +175,7 @@ export default function Settings() {
 
         <div className="form-actions">
           <button type="submit" disabled={saving || multiplierInvalid}>
+            <FaSave aria-hidden />
             {saving ? 'Saving…' : 'Save settings'}
           </button>
         </div>

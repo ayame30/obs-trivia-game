@@ -103,8 +103,15 @@ export interface TriviaLiveContextValue {
   refresh: () => void;
 }
 
+export interface QuestionsPage {
+  items: Question[];
+  total: number;
+  offset: number;
+  limit: number;
+}
+
 export interface GetQuestionsData {
-  questions: Question[];
+  questions: QuestionsPage;
 }
 
 export interface GetActiveRoundData {

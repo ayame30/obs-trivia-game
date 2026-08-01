@@ -1,5 +1,6 @@
 import { Link } from 'react-router';
 import { useMutation } from '@apollo/client/react';
+import { FaTwitch, FaSignOutAlt } from 'react-icons/fa';
 import { useTwitchAuth } from '../hooks/useTwitchAuth';
 import { getTwitchClientId, getTwitchOAuthUrl } from '../lib/twitchOAuth';
 import { CLEAR_TWITCH_TOKEN } from '../graphql/operations';
@@ -34,6 +35,7 @@ export default function Auth() {
           OAuth token is used to connect IRC chat for A/B/C/D votes.
         </p>
         <a href={oauthUrl ?? '#'} className="setup-step__oauth-link">
+          <FaTwitch aria-hidden />
           Connect with Twitch
         </a>
       </div>
@@ -64,6 +66,7 @@ export default function Auth() {
       <div className="form-actions">
         <Link to="/">← Dashboard</Link>
         <button type="button" className="danger" disabled={clearing} onClick={handleLogout}>
+          <FaSignOutAlt aria-hidden />
           {clearing ? 'Logging out…' : 'Log out & clear token'}
         </button>
       </div>

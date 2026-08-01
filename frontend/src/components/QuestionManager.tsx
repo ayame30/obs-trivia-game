@@ -1,6 +1,19 @@
 import { useEffect, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { useQuery, useMutation } from '@apollo/client/react';
 import {
+  FaPlus,
+  FaPlay,
+  FaEdit,
+  FaTrash,
+  FaPause,
+  FaEye,
+  FaSave,
+  FaTimes,
+  FaChevronLeft,
+  FaChevronRight,
+  FaCopy,
+} from 'react-icons/fa';
+import {
   GET_QUESTIONS,
   CREATE_QUESTION,
   UPDATE_QUESTION,
@@ -32,7 +45,10 @@ const emptyForm: QuestionFormState = {
   countdownSeconds: 30,
 };
 
+const PAGE_SIZE = 10;
 const MAX_TEXT_ROWS = 2;
+
+type BankMode = 'edit' | 'stream';
 
 function lineCount(value: string): number {
   if (!value) return 1;
@@ -67,28 +83,59 @@ export default function QuestionManager({
   const [form, setForm] = useState<QuestionFormState>(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
+  const [offset, setOffset] = useState(0);
+  const [mode, setMode] = useState<BankMode>('edit');
 
-  const { data, loading, refetch } = useQuery<GetQuestionsData>(GET_QUESTIONS);
+  const { data, loading, refetch } = useQuery<GetQuestionsData>(GET_QUESTIONS, {
+    variables: { offset, limit: PAGE_SIZE },
+  });
   const closeForm = () => {
     setFormOpen(false);
     setEditingId(null);
     setForm(emptyForm);
   };
+
+  const setBankMode = (next: BankMode) => {
+    setMode(next);
+    if (next !== 'edit') closeForm();
+  };
+
+  async function goToLastPage() {
+    const result = await refetch({ offset: 0, limit: PAGE_SIZE });
+    const total = result.data?.questions?.total ?? 0;
+    const lastOffset = Math.max(0, Math.floor((total - 1) / PAGE_SIZE) * PAGE_SIZE);
+    setOffset(lastOffset);
+    if (lastOffset === 0) return;
+    await refetch({ offset: lastOffset, limit: PAGE_SIZE });
+  }
+
   const [createQuestion, { loading: creating }] = useMutation(CREATE_QUESTION, {
+    refetchQueries: [{ query: GET_QUESTIONS, variables: { offset: 0, limit: 1 } }],
     onCompleted: () => {
       closeForm();
-      refetch();
+      void goToLastPage();
     },
   });
   const [updateQuestion, { loading: updating }] = useMutation(UPDATE_QUESTION, {
     onCompleted: () => {
       closeForm();
-      refetch();
+      void refetch({ offset, limit: PAGE_SIZE });
     },
   });
-  const [deleteQuestion] = useMutation(DELETE_QUESTION, { onCompleted: () => refetch() });
+  const [deleteQuestion] = useMutation(DELETE_QUESTION, {
+    refetchQueries: [{ query: GET_QUESTIONS, variables: { offset: 0, limit: 1 } }],
+    onCompleted: async () => {
+      const result = await refetch({ offset, limit: PAGE_SIZE });
+      const page = result.data?.questions;
+      if (!page) return;
+      if (page.items.length === 0 && offset > 0) {
+        setOffset(Math.max(0, offset - PAGE_SIZE));
+      }
+    },
+  });
   const [startQuestion, { loading: starting }] = useMutation<StartQuestionMutation>(START_QUESTION, {
     onCompleted: (res) => {
+      setBankMode('stream');
       onRoundChange?.(res.startQuestion.round);
       onActionError?.(res.startQuestion.warning);
     },
@@ -110,7 +157,13 @@ export default function QuestionManager({
     onError: (err) => onActionError?.(err.message),
   });
 
-  const questions: Question[] = data?.questions ?? [];
+  const page = data?.questions;
+  const questions: Question[] = page?.items ?? [];
+  const total = page?.total ?? 0;
+  const pageStart = total === 0 ? 0 : offset + 1;
+  const pageEnd = Math.min(offset + questions.length, total);
+  const canPrev = offset > 0;
+  const canNext = offset + PAGE_SIZE < total;
   const hasActive = activeRound?.status === 'active';
   const countdownPaused = activeRound?.countdownPaused;
 
@@ -161,174 +214,342 @@ export default function QuestionManager({
     setFormOpen(true);
   };
 
+  const startCopy = (q: Question) => {
+    setEditingId(null);
+    setForm({
+      text: limitLines(q.text),
+      optionA: limitLines(q.optionA),
+      optionB: limitLines(q.optionB),
+      optionC: limitLines(q.optionC),
+      optionD: limitLines(q.optionD),
+      correctAnswer: q.correctAnswer || 'A',
+      countdownSeconds: q.countdownSeconds ?? 30,
+    });
+    setFormOpen(true);
+  };
+
   const optionKeys = ['optionA', 'optionB', 'optionC', 'optionD'] as const;
+
+  const isEditMode = mode === 'edit';
+  const isStreamMode = mode === 'stream';
+  const activeOnPage = questions.some((q) => q.id === activeRound?.questionId);
 
   const content = (
     <>
-      {!embedded ? <h2>Question bank</h2> : null}
-
-      <div className="question-manager__toolbar">
-        <button type="button" onClick={openCreate}>
-          Add question
-        </button>
+      <div className="setup-step__live-header question-manager__header">
+        <h2>Question bank</h2>
+        <div className="question-manager__header-actions">
+          <div className="bank-mode-toggle" role="group" aria-label="Question bank mode">
+            <button
+              type="button"
+              className={`bank-mode-toggle__edit${isEditMode ? ' is-active' : ''}`}
+              aria-pressed={isEditMode}
+              onClick={() => setBankMode('edit')}
+            >
+              Edit Mode
+            </button>
+            <button
+              type="button"
+              className={`bank-mode-toggle__stream${isStreamMode ? ' is-active' : ''}`}
+              aria-pressed={isStreamMode}
+              onClick={() => setBankMode('stream')}
+            >
+              Stream Mode
+            </button>
+          </div>
+        </div>
       </div>
 
       {loading ? (
-        <p>Loading questions…</p>
+        <p className="setup-step__hint">Loading questions…</p>
       ) : (
-        <table className="question-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Question</th>
-              <th>Answer</th>
-              <th>Timer</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {questions.map((q) => (
-              <tr key={q.id}>
-                <td>{q.id}</td>
-                <td>{q.text}</td>
-                <td>{q.correctAnswer}</td>
-                <td>{q.countdownSeconds ?? 30}s</td>
-                <td>
-                  <div className="form-actions" style={{ flexWrap: 'wrap' }}>
-                    <button
-                      type="button"
-                      disabled={hasActive || starting}
-                      onClick={() => startQuestion({ variables: { questionId: q.id } })}
-                    >
-                      Start
-                    </button>
-                    <button type="button" className="secondary" onClick={() => startEdit(q)}>
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      className="danger"
-                      onClick={() => {
-                        if (window.confirm('Delete this question?')) {
-                          deleteQuestion({ variables: { id: q.id } });
-                        }
-                      }}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+        <>
+          {total > 0 ? (
+            <div className="pagination">
+              <span className="pagination__meta">
+                {pageStart}–{pageEnd} of {total}
+              </span>
+              <div className="pagination__controls">
+                <button
+                  type="button"
+                  className="secondary"
+                  disabled={!canPrev}
+                  onClick={() => setOffset(Math.max(0, offset - PAGE_SIZE))}
+                >
+                  <FaChevronLeft aria-hidden />
+                </button>
+                <button
+                  type="button"
+                  className="secondary"
+                  disabled={!canNext}
+                  onClick={() => setOffset(offset + PAGE_SIZE)}
+                >
+                  <FaChevronRight aria-hidden />
+                </button>
+              </div>
+            </div>
+          ) : null}
 
-      {hasActive && (
-        <div className="form-actions" style={{ marginTop: '1rem' }}>
-          <button
-            type="button"
-            className="secondary"
-            disabled={pausing || countdownPaused}
-            onClick={() => pauseCountdown()}
-          >
-            Pause
-          </button>
-          <button
-            type="button"
-            className="secondary"
-            disabled={resuming || !countdownPaused}
-            onClick={() => resumeCountdown()}
-          >
-            Resume
-          </button>
-          <button type="button" className="danger" disabled={stopping} onClick={() => stopQuestion()}>
-            Stop round & reveal answer
-          </button>
-        </div>
-      )}
-
-      {formOpen ? (
-        <div className="modal-overlay" onClick={closeForm}>
-          <div
-            className="modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="question-form-title"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="modal__header">
-              <h3 id="question-form-title">{editingId ? 'Edit question' : 'New question'}</h3>
-              <button type="button" className="modal__close secondary" onClick={closeForm} aria-label="Close">
-                ×
+          {isEditMode ? (
+            <div className="question-manager__toolbar">
+              <button type="button" className="question-manager__add" onClick={openCreate}>
+                <FaPlus aria-hidden />
+                Add question
               </button>
             </div>
+          ) : null}
 
-            <form className="form-grid modal__body" onSubmit={handleSubmit}>
-              <div>
-                <label>Question</label>
-                <textarea
-                  rows={MAX_TEXT_ROWS}
-                  className="question-field--2-rows"
-                  value={form.text}
-                  onChange={(e) => setForm({ ...form, text: limitLines(e.target.value) })}
-                  onKeyDown={(e) => blockExtraRows(e, form.text)}
-                  required
-                  autoFocus
-                />
+          <table className="question-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Question</th>
+                <th>Ans</th>
+                <th>Timer</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {questions.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="question-table__empty">
+                    {isEditMode
+                      ? 'No questions yet. Add one to get started.'
+                      : 'No questions yet. Switch to Edit mode to add some.'}
+                  </td>
+                </tr>
+              ) : (
+                questions.map((q) => {
+                  const isActiveQuestion = hasActive && activeRound?.questionId === q.id;
+                  return (
+                    <tr key={q.id}>
+                      <td>{q.id}</td>
+                      <td className="question-table__question">
+                        <span className="question-table__text" title={q.text}>
+                          {q.text}
+                        </span>
+                      </td>
+                      <td>{q.correctAnswer}</td>
+                      <td>{q.countdownSeconds ?? 30}s</td>
+                      <td>
+                        <div className="question-table__actions">
+                          {isStreamMode ? (
+                            isActiveQuestion ? (
+                              <>
+                                {countdownPaused ? (
+                                  <button
+                                    type="button"
+                                    className="question-table__btn question-table__btn--start"
+                                    aria-label="Resume"
+                                    title="Resume"
+                                    disabled={resuming}
+                                    onClick={() => resumeCountdown()}
+                                  >
+                                    <FaPlay aria-hidden />
+                                  </button>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    className="question-table__btn question-table__btn--pause"
+                                    aria-label="Pause"
+                                    title="Pause"
+                                    disabled={pausing}
+                                    onClick={() => pauseCountdown()}
+                                  >
+                                    <FaPause aria-hidden />
+                                  </button>
+                                )}
+                                <button
+                                  type="button"
+                                  className="question-table__btn question-table__btn--reveal"
+                                  disabled={stopping}
+                                  onClick={() => stopQuestion()}
+                                >
+                                  <FaEye aria-hidden />
+                                  Reveal answer
+                                </button>
+                              </>
+                            ) : (
+                              <button
+                                type="button"
+                                className="question-table__btn question-table__btn--start"
+                                aria-label="Start"
+                                title="Start"
+                                disabled={hasActive || starting}
+                                onClick={() => startQuestion({ variables: { questionId: q.id } })}
+                              >
+                                <FaPlay aria-hidden />
+                              </button>
+                            )
+                          ) : (
+                            <>
+                              <button
+                                type="button"
+                                className="question-table__btn question-table__btn--edit"
+                                aria-label="Edit"
+                                title="Edit"
+                                onClick={() => startEdit(q)}
+                              >
+                                <FaEdit aria-hidden />
+                              </button>
+                              <button
+                                type="button"
+                                className="question-table__btn"
+                                aria-label="Copy"
+                                title="Copy"
+                                onClick={() => startCopy(q)}
+                              >
+                                <FaCopy aria-hidden />
+                              </button>
+                              <button
+                                type="button"
+                                className="question-table__btn question-table__btn--danger"
+                                aria-label="Delete"
+                                title="Delete"
+                                onClick={() => {
+                                  if (window.confirm('Delete this question?')) {
+                                    deleteQuestion({ variables: { id: q.id } });
+                                  }
+                                }}
+                              >
+                                <FaTrash aria-hidden />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </>
+      )}
+
+      {isStreamMode && hasActive && !activeOnPage ? (
+        <div className="question-manager__round-actions">
+          {countdownPaused ? (
+            <button
+              type="button"
+              className="question-table__btn question-table__btn--start"
+              aria-label="Resume"
+              title="Resume"
+              disabled={resuming}
+              onClick={() => resumeCountdown()}
+            >
+              <FaPlay aria-hidden />
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="question-table__btn question-table__btn--pause"
+              aria-label="Pause"
+              title="Pause"
+              disabled={pausing}
+              onClick={() => pauseCountdown()}
+            >
+              <FaPause aria-hidden />
+              Pause
+            </button>
+          )}
+          <button
+            type="button"
+            className="question-table__btn question-table__btn--reveal"
+            disabled={stopping}
+            onClick={() => stopQuestion()}
+          >
+            <FaEye aria-hidden />
+            Reveal answer
+          </button>
+        </div>
+      ) : null}
+
+      {formOpen && isEditMode ? (
+        <div className="modal-overlay" onClick={closeForm}>
+            <form
+              className="modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="question-form-title"
+              onClick={(e) => e.stopPropagation()}
+              onSubmit={handleSubmit}
+            >
+              <div className="modal__header">
+                <h3 id="question-form-title">{editingId ? 'Edit question' : 'New question'}</h3>
+                <button type="button" className="modal__close secondary" onClick={closeForm} aria-label="Close">
+                  <FaTimes aria-hidden />
+                </button>
               </div>
-              <div className="grid-2">
-                {optionKeys.map((key, i) => (
-                  <div key={key}>
-                    <label>Option {String.fromCharCode(65 + i)}</label>
-                    <textarea
-                      rows={MAX_TEXT_ROWS}
-                      className="question-field--2-rows"
-                      value={form[key]}
-                      onChange={(e) => setForm({ ...form, [key]: limitLines(e.target.value) })}
-                      onKeyDown={(e) => blockExtraRows(e, form[key])}
+
+              <div className="form-grid modal__body">
+                <div>
+                  <label>Question</label>
+                  <textarea
+                    rows={MAX_TEXT_ROWS}
+                    className="question-field--2-rows"
+                    value={form.text}
+                    onChange={(e) => setForm({ ...form, text: limitLines(e.target.value) })}
+                    onKeyDown={(e) => blockExtraRows(e, form.text)}
+                    required
+                    autoFocus
+                  />
+                </div>
+                <div className="grid-2">
+                  {optionKeys.map((key, i) => (
+                    <div key={key}>
+                      <label>Option {String.fromCharCode(65 + i)}</label>
+                      <textarea
+                        rows={MAX_TEXT_ROWS}
+                        className="question-field--2-rows"
+                        value={form[key]}
+                        onChange={(e) => setForm({ ...form, [key]: limitLines(e.target.value) })}
+                        onKeyDown={(e) => blockExtraRows(e, form[key])}
+                        required
+                      />
+                    </div>
+                  ))}
+                </div>
+                <div className="grid-2">
+                  <div>
+                    <label>Correct answer</label>
+                    <select
+                      value={form.correctAnswer}
+                      onChange={(e) =>
+                        setForm({ ...form, correctAnswer: e.target.value as AnswerChoice })
+                      }
+                    >
+                      <option value="A">A</option>
+                      <option value="B">B</option>
+                      <option value="C">C</option>
+                      <option value="D">D</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label>Countdown (seconds)</label>
+                    <input
+                      type="number"
+                      min={5}
+                      max={600}
+                      value={form.countdownSeconds}
+                      onChange={(e) => setForm({ ...form, countdownSeconds: e.target.value })}
                       required
                     />
                   </div>
-                ))}
-              </div>
-              <div className="grid-2">
-                <div>
-                  <label>Correct answer</label>
-                  <select
-                    value={form.correctAnswer}
-                    onChange={(e) =>
-                      setForm({ ...form, correctAnswer: e.target.value as AnswerChoice })
-                    }
-                  >
-                    <option value="A">A</option>
-                    <option value="B">B</option>
-                    <option value="C">C</option>
-                    <option value="D">D</option>
-                  </select>
-                </div>
-                <div>
-                  <label>Countdown (seconds)</label>
-                  <input
-                    type="number"
-                    min={5}
-                    max={600}
-                    value={form.countdownSeconds}
-                    onChange={(e) => setForm({ ...form, countdownSeconds: e.target.value })}
-                    required
-                  />
                 </div>
               </div>
-              <div className="form-actions">
+
+              <div className="modal__footer form-actions">
                 <button type="submit" disabled={creating || updating}>
+                  {editingId ? <FaSave aria-hidden /> : <FaPlus aria-hidden />}
                   {creating || updating ? 'Saving…' : editingId ? 'Save changes' : 'Add question'}
                 </button>
                 <button type="button" className="secondary" onClick={closeForm}>
+                  <FaTimes aria-hidden />
                   Cancel
                 </button>
               </div>
             </form>
-          </div>
         </div>
       ) : null}
     </>

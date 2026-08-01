@@ -1,5 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
+import {
+  FaTwitch,
+  FaCopy,
+  FaExternalLinkAlt,
+  FaCheck,
+  FaPlug,
+  FaRedo,
+  FaSignOutAlt,
+  FaPaperPlane,
+  FaSyncAlt,
+} from 'react-icons/fa';
 import SetupStep from './SetupStep';
 import QuestionManager from './QuestionManager';
 import LiveRoundPanel from './LiveRoundPanel';
@@ -69,7 +80,9 @@ export default function DashboardSetup({
     GET_TWITCH_CONFIG,
     { pollInterval: 30000 }
   );
-  const { data: questionsData } = useQuery<GetQuestionsData>(GET_QUESTIONS);
+  const { data: questionsData } = useQuery<GetQuestionsData>(GET_QUESTIONS, {
+    variables: { offset: 0, limit: 1 },
+  });
   const config = configData?.twitchConfig;
 
   const [setToken, { loading: savingToken, error: tokenError }] = useMutation(SET_TWITCH_TOKEN, {
@@ -101,7 +114,7 @@ export default function DashboardSetup({
   const oauthComplete = Boolean(accessToken && login && !authLoading);
   const chatComplete = Boolean(config?.hasToken && config?.chatConnected && testSent);
   const overlayComplete = overlayAcknowledged;
-  const questionsCount = questionsData?.questions?.length ?? 0;
+  const questionsCount = questionsData?.questions?.total ?? 0;
   const showCorrect = round?.status === 'ended';
 
   const stepComplete = useMemo(
@@ -221,6 +234,7 @@ export default function DashboardSetup({
                 disabled={clearingToken}
                 onClick={handleLogout}
               >
+                <FaSignOutAlt aria-hidden />
                 {clearingToken ? 'Logging out…' : 'Log out & clear token'}
               </button>
             </div>
@@ -233,6 +247,7 @@ export default function DashboardSetup({
             </p>
             {oauthUrl ? (
               <a className="setup-step__oauth-link" href={oauthUrl}>
+                <FaTwitch aria-hidden />
                 Connect with Twitch
               </a>
             ) : null}
@@ -244,6 +259,7 @@ export default function DashboardSetup({
                   disabled={clearingToken}
                   onClick={handleLogout}
                 >
+                  <FaSignOutAlt aria-hidden />
                   {clearingToken ? 'Clearing…' : 'Clear server token'}
                 </button>
               </div>
@@ -284,6 +300,7 @@ export default function DashboardSetup({
 
             <div className="form-actions">
               <button type="button" onClick={saveToken} disabled={!accessToken || savingToken}>
+                <FaPlug aria-hidden />
                 {savingToken ? 'Saving…' : config?.hasToken ? 'Update token' : 'Connect chat on server'}
               </button>
               {config?.hasToken ? (
@@ -293,6 +310,7 @@ export default function DashboardSetup({
                   disabled={reconnecting}
                   onClick={() => reconnect()}
                 >
+                  <FaRedo aria-hidden />
                   Reconnect IRC
                 </button>
               ) : null}
@@ -303,6 +321,7 @@ export default function DashboardSetup({
                   disabled={clearingToken}
                   onClick={handleLogout}
                 >
+                  <FaSignOutAlt aria-hidden />
                   {clearingToken ? 'Logging out…' : 'Log out & clear token'}
                 </button>
               )}
@@ -330,6 +349,7 @@ export default function DashboardSetup({
                       sendChatMessage({ variables: { message: testMessage.trim() } })
                     }
                   >
+                    <FaPaperPlane aria-hidden />
                     {sendingMessage ? 'Sending…' : 'Send test message'}
                   </button>
                 </div>
@@ -354,8 +374,8 @@ export default function DashboardSetup({
         onToggle={() => setOpenStep(openStep === 3 ? 0 : 3)}
       >
         <p className="setup-step__hint">
-          Add each URL as a <strong>Browser Source</strong> in OBS or Streamlabs. Set width ~1920,
-          height ~1080, and enable transparent background if your scene needs it.
+          Add each URL as a <strong>Browser Source</strong> in OBS or Streamlabs. Set width ~900,
+          height ~600, and enable transparent background if your scene needs it.
         </p>
         <p className="setup-step__hint">
           If an overlay looks blank or stuck, right-click the Browser Source in OBS →{' '}
@@ -367,9 +387,11 @@ export default function DashboardSetup({
           <div className="setup-step__url-row">
             <input type="text" readOnly value={overlayUrl} />
             <button type="button" className="secondary" onClick={() => copyUrl(overlayUrl)}>
+              <FaCopy aria-hidden />
               Copy
             </button>
             <a href="/overlay" target="_blank" rel="noreferrer" className="setup-step__preview-link">
+              <FaExternalLinkAlt aria-hidden />
               Preview
             </a>
           </div>
@@ -381,6 +403,7 @@ export default function DashboardSetup({
           <div className="setup-step__url-row">
             <input type="text" readOnly value={scoreboardOverlayUrl} />
             <button type="button" className="secondary" onClick={() => copyUrl(scoreboardOverlayUrl)}>
+              <FaCopy aria-hidden />
               Copy
             </button>
             <a
@@ -389,6 +412,7 @@ export default function DashboardSetup({
               rel="noreferrer"
               className="setup-step__preview-link"
             >
+              <FaExternalLinkAlt aria-hidden />
               Preview
             </a>
           </div>
@@ -397,7 +421,8 @@ export default function DashboardSetup({
 
         <div className="form-actions">
           <button type="button" onClick={onClickAcknowledgeOverlay}>
-            {overlayAcknowledged ? 'Marked as added' : 'I added the overlays'}
+            <FaCheck aria-hidden />
+            Done
           </button>
         </div>
       </SetupStep>
@@ -429,6 +454,7 @@ export default function DashboardSetup({
                     }
                   }}
                 >
+                  <FaSyncAlt aria-hidden />
                   Reset round #
                 </button>
               </div>
@@ -436,7 +462,6 @@ export default function DashboardSetup({
             </div>
 
             <div className="card setup-step__question-card">
-              <h3 className="setup-step__section-title">Question bank</h3>
               <QuestionManager
                 embedded
                 activeRound={round}
@@ -447,24 +472,14 @@ export default function DashboardSetup({
           </div>
 
           <div className="card setup-step__stream-scoreboard">
-            <div className="setup-step__live-header">
-              <h3>Scoreboard</h3>
-              <button
-                type="button"
-                className="secondary"
-                disabled={resettingScores}
-                onClick={() => {
-                  if (window.confirm('Reset all scores?')) {
-                    if (window.confirm('Are you sure??')) {
-                      resetScoreboard();
-                    }
-                  }
-                }}
-              >
-                Reset
-              </button>
-            </div>
-            <ScoreboardEditor entries={scoreboard} onSaved={setScoreboard} />
+            <ScoreboardEditor
+              entries={scoreboard}
+              onSaved={setScoreboard}
+              resetting={resettingScores}
+              onReset={() => {
+                resetScoreboard();
+              }}
+            />
           </div>
         </div>
       </SetupStep>

@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import DashboardSetup from '../components/DashboardSetup';
+import QuestionManager from '../components/QuestionManager';
 import { useTriviaLive } from '../hooks/useTriviaLive';
 
-export default function Dashboard() {
-  const { round, setRound, scoreboard, setScoreboard, loading, subError } = useTriviaLive();
+export default function Questions() {
+  const { round, setRound, loading, subError } = useTriviaLive();
   const [actionError, setActionError] = useState<string | null>(null);
 
   return (
-    <div className="dashboard">
+    <div className="questions-page">
       {loading && <p className="dashboard__status">Connecting…</p>}
       {subError && <div className="error-banner">Subscription error: {subError}</div>}
       {actionError && (
@@ -19,11 +19,9 @@ export default function Dashboard() {
         </div>
       )}
 
-      <DashboardSetup
-        round={round}
-        setRound={setRound}
-        scoreboard={scoreboard}
-        setScoreboard={setScoreboard}
+      <QuestionManager
+        activeRound={round}
+        onRoundChange={setRound}
         onActionError={setActionError}
       />
     </div>

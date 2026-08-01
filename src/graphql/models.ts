@@ -41,6 +41,21 @@ export class QuestionModel {
   createdAt!: string | null;
 }
 
+@ObjectType('QuestionsPage')
+export class QuestionsPageModel {
+  @Field(() => [QuestionModel])
+  items!: QuestionModel[];
+
+  @Field(() => Int)
+  total!: number;
+
+  @Field(() => Int)
+  offset!: number;
+
+  @Field(() => Int)
+  limit!: number;
+}
+
 @ObjectType('VoteCounts')
 export class VoteCountsModel {
   @Field(() => Int)

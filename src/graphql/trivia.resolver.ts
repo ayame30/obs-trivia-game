@@ -16,6 +16,7 @@ import { RoundStatus } from '../common/constants';
 import {
   CreateQuestionInput,
   QuestionModel,
+  QuestionsPageModel,
   RoundModel,
   ScoreboardEntryModel,
   ScoreboardUpdateInput,
@@ -49,9 +50,12 @@ export class TriviaResolver {
     @Inject(PUB_SUB) private readonly pubSub: PubSub
   ) {}
 
-  @Query(() => [QuestionModel])
-  questions() {
-    return this.questionsService.findAll();
+  @Query(() => QuestionsPageModel)
+  questions(
+    @Args('offset', { type: () => Int, defaultValue: 0 }) offset: number,
+    @Args('limit', { type: () => Int, defaultValue: 10 }) limit: number
+  ) {
+    return this.questionsService.findPage(offset, limit);
   }
 
   @Query(() => QuestionModel, { nullable: true })

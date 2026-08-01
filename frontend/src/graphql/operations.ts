@@ -47,9 +47,14 @@ export const ROUND_FIELDS = gql`
 `;
 
 export const GET_QUESTIONS = gql`
-  query GetQuestions {
-    questions {
-      ...QuestionFields
+  query GetQuestions($offset: Int!, $limit: Int!) {
+    questions(offset: $offset, limit: $limit) {
+      items {
+        ...QuestionFields
+      }
+      total
+      offset
+      limit
     }
   }
   ${QUESTION_FIELDS}

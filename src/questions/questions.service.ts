@@ -41,6 +41,24 @@ export class QuestionsService {
     return rows.map((row) => mapQuestionEntity(row)).filter(Boolean);
   }
 
+  async findPage(offset = 0, limit = 10) {
+    const safeOffset = Math.max(0, Math.floor(offset) || 0);
+    const safeLimit = Math.min(100, Math.max(1, Math.floor(limit) || 10));
+
+    const [rows, total] = await this.questionRepo.findAndCount({
+      order: { id: 'ASC' },
+      skip: safeOffset,
+      take: safeLimit,
+    });
+
+    return {
+      items: rows.map((row) => mapQuestionEntity(row)).filter(Boolean),
+      total,
+      offset: safeOffset,
+      limit: safeLimit,
+    };
+  }
+
   async findOne(id: number) {
     const row = await this.questionRepo.findOne({ where: { id } });
     return mapQuestionEntity(row);
