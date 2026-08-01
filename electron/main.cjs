@@ -195,6 +195,14 @@ function registerWindowIpc() {
   });
 }
 
+function getAppIconPath() {
+  const ico = path.join(__dirname, 'build', 'icon.ico');
+  const png = path.join(__dirname, 'build', 'icon.png');
+  if (process.platform === 'win32' && fs.existsSync(ico)) return ico;
+  if (fs.existsSync(png)) return png;
+  return undefined;
+}
+
 async function createWindow(port) {
   mainWindow = new BrowserWindow({
     width: 1280,
@@ -203,6 +211,7 @@ async function createWindow(port) {
     minHeight: 640,
     title: 'Obs Trivia game',
     frame: false,
+    icon: getAppIconPath(),
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       nodeIntegration: false,
@@ -215,7 +224,7 @@ async function createWindow(port) {
     return { action: 'deny' };
   });
 
-  await mainWindow.loadURL(`http://127.0.0.1:${port}/`);
+  await mainWindow.loadURL(`http://localhost:${port}/`);
 
   mainWindow.on('closed', () => {
     mainWindow = null;

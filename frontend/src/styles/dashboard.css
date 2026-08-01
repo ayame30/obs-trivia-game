@@ -1,3 +1,6 @@
+.layout-header__title-highlight {
+  color: var(--accent);
+}
 .layout {
   font-size: 14px;
   display: flex;

@@ -1,0 +1,27 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="8" y="8" width="240" height="240" rx="32" fill="#0c0e12"/>
+  <text
+    x="50%"
+    y="41%"
+    dominant-baseline="middle"
+    text-anchor="middle"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="62"
+    font-weight="bold"
+    fill="#ffffff"
+  >
+    OBS
+  </text>
+  <text
+    x="50%"
+    y="66%"
+    dominant-baseline="middle"
+    text-anchor="middle"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="54"
+    font-weight="bold"
+    fill="#208d86"
+  >
+    Trivia
+  </text>
+</svg>

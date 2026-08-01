@@ -4,6 +4,7 @@
   "private": true,
   "description": "Obs Trivia game — Twitch chat trivia for OBS overlays",
   "author": "Obs Trivia game",
+  "license": "AGPL-3.0-only",
   "main": "electron/main.cjs",
   "engines": {
     "node": ">=22.5.0"
@@ -83,21 +84,19 @@
       }
     ],
     "win": {
+      "icon": "electron/build/icon.ico",
       "target": [
         {
           "target": "nsis",
           "arch": [
             "x64"
           ]
-        },
-        {
-          "target": "portable",
-          "arch": [
-            "x64"
-          ]
         }
       ],
       "artifactName": "ObsTriviaGame-${version}-${arch}.${ext}"
+    },
+    "mac": {
+      "icon": "electron/build/icon.icns"
     },
     "nsis": {
       "oneClick": true,
@@ -106,9 +105,6 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "Obs Trivia game"
-    },
-    "portable": {
-      "artifactName": "ObsTriviaGame-${version}-portable.${ext}"
     }
   }
 }

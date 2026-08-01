@@ -2,14 +2,35 @@
 
 Twitch chat trivia with live OBS overlays (ABCD votes, scoreboard, countdown).
 
+## Contents
+
+1. [For streamers (no coding)](#for-streamers-no-coding)
+2. [Screenshots](#screenshots)
+3. [For developers](#for-developers)
+   - [Requirements](#requirements)
+   - [Setup](#setup)
+   - [Run API only](#run-api-only)
+   - [Build UI + API, then start](#build-ui--api-then-start)
+   - [Frontend hot reload](#frontend-hot-reload-optional)
+   - [Overlay CSS + MCP](#overlay-css-file-split--mcp)
+   - [Electron desktop app](#electron-desktop-app)
+4. [Twitch chat votes](#twitch-chat-votes)
+5. [GraphQL (developers)](#graphql-developers)
+   - [Questions](#questions)
+   - [Live round](#live-round)
+   - [Subscriptions](#subscriptions)
+6. [License](#license)
+
+---
+
 ## For streamers (no coding)
 
-1. Download the Windows build (`ObsTriviaGame-*-Setup.exe` installer, or the portable `.exe`).
+1. Download the Windows installer (`ObsTriviaGame-*-x64.exe`).
 2. Install / double-click to open **Obs Trivia game**.
 3. Sign in with Twitch in the app and finish the setup steps.
 4. In OBS or Streamlabs, add **Browser Sources**:
-   - Trivia overlay: `http://localhost:4000/overlay/questions`
-   - Scoreboard: `http://localhost:4000/overlay/scoreboard`
+   - Trivia overlay: [http://localhost:4000/overlay/questions](http://localhost:4000/overlay/questions)
+   - Scoreboard: [http://localhost:4000/overlay/scoreboard](http://localhost:4000/overlay/scoreboard)
 5. Keep the app **running** while you stream.
 
 To stop: close the app window.
@@ -50,10 +71,13 @@ npm run dev
 npm run build:start
 ```
 
-App: `http://localhost:4000/`  
-OBS overlay: `http://localhost:4000/overlay/questions`  
-Scoreboard overlay: `http://localhost:4000/overlay/scoreboard`  
-Twitch OAuth redirect: `http://localhost:4000/` (register this URI on your Twitch app)
+| Surface | URL |
+|---------|-----|
+| App | [http://localhost:4000/](http://localhost:4000/) |
+| Trivia overlay | [http://localhost:4000/overlay/questions](http://localhost:4000/overlay/questions) |
+| Scoreboard overlay | [http://localhost:4000/overlay/scoreboard](http://localhost:4000/overlay/scoreboard) |
+| Twitch OAuth redirect | [http://localhost:4000/](http://localhost:4000/) (register this URI on your Twitch app) |
+| Overlay CSS + Question CRUD MCP | [http://127.0.0.1:4000/mcp](http://127.0.0.1:4000/mcp) (`POST`) |
 
 ### Frontend hot reload (optional)
 
@@ -65,21 +89,24 @@ npm run dev
 cd frontend && npm run dev
 ```
 
-Vite proxies `/graphql` to the API. UI: `http://localhost:3001`  
+Vite proxies `/graphql` to the API. UI: [http://localhost:3001](http://localhost:3001)  
 OAuth still redirects to port **4000** when using Vite (see `VITE_TWITCH_REDIRECT_ORIGIN`).
 
 ### Overlay CSS (file split + MCP)
 
-- App chrome: `frontend/src/styles/dashboard.css`
-- OBS overlays: `frontend/src/styles/overlay.css`
-- Shared tokens/forms: `frontend/src/styles/base.css`  
-  (`global.css` only imports these three.)
+| File | Role |
+|------|------|
+| [`frontend/src/styles/dashboard.css`](frontend/src/styles/dashboard.css) | App chrome |
+| [`frontend/src/styles/overlay.css`](frontend/src/styles/overlay.css) | OBS overlays |
+| [`frontend/src/styles/base.css`](frontend/src/styles/base.css) | Shared tokens / forms |
+| [`frontend/src/styles/global.css`](frontend/src/styles/global.css) | Imports the three above |
 
-Custom CSS is editable in **Settings → Overlay custom CSS**, or via MCP on the running API:
+Custom CSS is editable in **Settings → Overlay custom CSS**, or via MCP on the running API (`POST` [http://127.0.0.1:4000/mcp](http://127.0.0.1:4000/mcp)).
 
-`POST http://127.0.0.1:4000/mcp`
+See:
 
-See [`mcp/overlay-css/README.md`](mcp/overlay-css/README.md) and the frontend guide [`frontend/docs/overlay-css-mcp.md`](frontend/docs/overlay-css-mcp.md) for Cursor MCP config and tools.
+- [`mcp/overlay-css/README.md`](mcp/overlay-css/README.md)
+- [`frontend/docs/overlay-css-mcp.md`](frontend/docs/overlay-css-mcp.md)
 
 ### Electron desktop app
 
@@ -87,11 +114,11 @@ See [`mcp/overlay-css/README.md`](mcp/overlay-css/README.md) and the frontend gu
 # Dev: builds server+UI, opens Electron window
 npm run electron:dev
 
-# Windows installer + portable exe → release/
+# Windows NSIS installer → release/
 npm run dist:win
 ```
 
-`dist:win` packs Nest + production `node_modules` into `electron-resources/server`, then runs electron-builder.
+`dist:win` packs Nest + production `node_modules` into `electron-resources/server`, then runs electron-builder (NSIS only).
 
 ---
 
@@ -176,3 +203,7 @@ mutation {
 Each item must include **exactly one** of `score` or `delta`. Scores never go below 0.
 
 Use `resetRounds` to clear rounds/votes and reset the round counter.
+
+## License
+
+This project is licensed under the [GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0-only).

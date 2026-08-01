@@ -21,7 +21,7 @@ export default function Layout() {
     <div className={`layout${electron ? ' layout--electron' : ''}`}>
       <header className={electron ? 'layout-header layout-header--electron' : 'layout-header'}>
         <div className="layout-header__brand">
-          <h1 className="layout-header__title">Obs Trivia game</h1>
+          <h1 className="layout-header__title">Obs <span className="layout-header__title-highlight">Trivia</span> game</h1>
         </div>
         <nav className="layout-header__nav">
           <NavLink to="/" end>
