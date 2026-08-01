@@ -45,7 +45,6 @@ export function useTwitchAuth() {
       headers: { Authorization: `OAuth ${accessToken}` },
     })
       .then((res) => {
-        console.log(res);
         if (!res.ok) throw new Error('Invalid token');
         return res.json() as Promise<{ login: string; user_id: string }>;
       })
@@ -67,5 +66,12 @@ export function useTwitchAuth() {
       .finally(() => setLoading(false));
   }, [accessToken]);
 
-  return { accessToken, login, userId, loading };
+  const logout = () => {
+    setAccessToken('');
+    setLogin('');
+    setUserId('');
+    sessionStorage.removeItem(STORAGE_KEY);
+  };
+
+  return { accessToken, login, userId, loading, logout };
 }

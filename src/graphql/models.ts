@@ -229,3 +229,12 @@ export class UpdateAppSettingsInput {
   @Field(() => Int, { nullable: true })
   scoreMultiplier?: number;
 }
+
+@ObjectType()
+export class StartQuestionPayload {
+  @Field(() => RoundModel)
+  round!: RoundModel;
+
+  @Field(() => String, { nullable: true })
+  warning!: string | null;
+}

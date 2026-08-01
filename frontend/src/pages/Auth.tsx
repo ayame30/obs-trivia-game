@@ -1,10 +1,15 @@
 import { Link } from 'react-router-dom';
+import { useMutation } from '@apollo/client/react';
 import { useTwitchAuth } from '../hooks/useTwitchAuth';
 import { getTwitchClientId, getTwitchOAuthUrl } from '../lib/twitchOAuth';
+import { CLEAR_TWITCH_TOKEN } from '../graphql/operations';
 
 export default function Auth() {
-  const { accessToken, login, userId, loading } = useTwitchAuth();
+  const { accessToken, login, userId, loading, logout } = useTwitchAuth();
   const oauthUrl = getTwitchOAuthUrl('/auth');
+  const [clearTwitchToken, { loading: clearing }] = useMutation(CLEAR_TWITCH_TOKEN, {
+    onCompleted: () => logout(),
+  });
 
   if (!getTwitchClientId()) {
     return (
@@ -35,6 +40,17 @@ export default function Auth() {
     );
   }
 
+  const handleLogout = () => {
+    if (
+      !window.confirm(
+        'Log out and remove the Twitch token from this browser and the server database?'
+      )
+    ) {
+      return;
+    }
+    clearTwitchToken();
+  };
+
   return (
     <div className="card">
       <h2>Signed in</h2>
@@ -45,7 +61,12 @@ export default function Auth() {
         Token stored in this browser session. Go to the dashboard to connect chat to the trivia
         backend.
       </p>
-      <Link to="/">← Dashboard</Link>
+      <div className="form-actions">
+        <Link to="/">← Dashboard</Link>
+        <button type="button" className="danger" disabled={clearing} onClick={handleLogout}>
+          {clearing ? 'Logging out…' : 'Log out & clear token'}
+        </button>
+      </div>
     </div>
   );
 }

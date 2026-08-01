@@ -54,10 +54,16 @@ function blockExtraRows(e: KeyboardEvent<HTMLTextAreaElement>, value: string): v
 interface QuestionManagerProps {
   activeRound: Round | null | undefined;
   onRoundChange?: (round: Round | null) => void;
+  onActionError?: (message: string | null) => void;
   embedded?: boolean;
 }
 
-export default function QuestionManager({ activeRound, onRoundChange, embedded }: QuestionManagerProps) {
+export default function QuestionManager({
+  activeRound,
+  onRoundChange,
+  onActionError,
+  embedded,
+}: QuestionManagerProps) {
   const [form, setForm] = useState<QuestionFormState>(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
@@ -82,16 +88,26 @@ export default function QuestionManager({ activeRound, onRoundChange, embedded }
   });
   const [deleteQuestion] = useMutation(DELETE_QUESTION, { onCompleted: () => refetch() });
   const [startQuestion, { loading: starting }] = useMutation<StartQuestionMutation>(START_QUESTION, {
-    onCompleted: (res) => onRoundChange?.(res.startQuestion),
+    onCompleted: (res) => {
+      onRoundChange?.(res.startQuestion.round);
+      onActionError?.(res.startQuestion.warning);
+    },
+    onError: (err) => onActionError?.(err.message),
   });
   const [stopQuestion, { loading: stopping }] = useMutation<StopQuestionMutation>(STOP_QUESTION, {
-    onCompleted: (res) => onRoundChange?.(res.stopQuestion),
+    onCompleted: (res) => {
+      onActionError?.(null);
+      onRoundChange?.(res.stopQuestion);
+    },
+    onError: (err) => onActionError?.(err.message),
   });
   const [pauseCountdown, { loading: pausing }] = useMutation<PauseCountdownMutation>(PAUSE_COUNTDOWN, {
     onCompleted: (res) => onRoundChange?.(res.pauseCountdown),
+    onError: (err) => onActionError?.(err.message),
   });
   const [resumeCountdown, { loading: resuming }] = useMutation<ResumeCountdownMutation>(RESUME_COUNTDOWN, {
     onCompleted: (res) => onRoundChange?.(res.resumeCountdown),
+    onError: (err) => onActionError?.(err.message),
   });
 
   const questions: Question[] = data?.questions ?? [];

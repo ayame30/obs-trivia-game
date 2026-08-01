@@ -36,4 +36,11 @@ export class TwitchConfigService {
     const saved = await this.configRepo.save(entity);
     return mapTwitchConfigEntity(saved);
   }
+
+  async clearConfig(): Promise<boolean> {
+    const existing = await this.findOne();
+    if (!existing) return true;
+    await this.configRepo.remove(existing);
+    return true;
+  }
 }

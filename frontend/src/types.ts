@@ -144,7 +144,10 @@ export interface RoundsResetData {
 }
 
 export interface StartQuestionMutation {
-  startQuestion: Round;
+  startQuestion: {
+    round: Round;
+    warning: string | null;
+  };
 }
 
 export interface StopQuestionMutation {

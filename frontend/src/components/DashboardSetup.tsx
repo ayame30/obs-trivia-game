@@ -11,6 +11,7 @@ import {
   GET_QUESTIONS,
   SET_TWITCH_TOKEN,
   RECONNECT_TWITCH,
+  CLEAR_TWITCH_TOKEN,
   SEND_TWITCH_CHAT_MESSAGE,
   RESET_SCOREBOARD,
   RESET_ROUNDS,
@@ -31,6 +32,7 @@ interface DashboardSetupProps {
   setRound: (round: Round | null) => void;
   scoreboard: ScoreboardEntry[];
   setScoreboard: (entries: ScoreboardEntry[]) => void;
+  onActionError?: (message: string | null) => void;
 }
 
 function useOverlayAcknowledged(): [boolean, () => void] {
@@ -49,8 +51,9 @@ export default function DashboardSetup({
   setRound,
   scoreboard,
   setScoreboard,
+  onActionError,
 }: DashboardSetupProps) {
-  const { accessToken, login, userId, loading: authLoading } = useTwitchAuth();
+  const { accessToken, login, userId, loading: authLoading, logout } = useTwitchAuth();
   const [openStep, setOpenStep] = useState(1);
   const prevCompleteRef = useRef([false, false, false, false]);
   const initializedRef = useRef(false);
@@ -74,6 +77,14 @@ export default function DashboardSetup({
   });
   const [reconnect, { loading: reconnecting }] = useMutation(RECONNECT_TWITCH, {
     onCompleted: () => refetchConfig(),
+  });
+  const [clearTwitchToken, { loading: clearingToken }] = useMutation(CLEAR_TWITCH_TOKEN, {
+    onCompleted: () => {
+      logout();
+      setTestSent(false);
+      refetchConfig();
+      setOpenStep(1);
+    },
   });
   const [sendChatMessage, { loading: sendingMessage, error: sendError }] = useMutation(
     SEND_TWITCH_CHAT_MESSAGE,
@@ -144,6 +155,23 @@ export default function DashboardSetup({
     });
   };
 
+  const handleLogout = () => {
+    if (
+      !window.confirm(
+        'Log out and remove the Twitch token from this browser and the server database?'
+      )
+    ) {
+      return;
+    }
+    if (config?.hasToken) {
+      clearTwitchToken();
+    } else {
+      logout();
+      setTestSent(false);
+      setOpenStep(1);
+    }
+  };
+
   const copyUrl = async (url: string) => {
     try {
       await navigator.clipboard.writeText(url);
@@ -182,6 +210,16 @@ export default function DashboardSetup({
               Your OAuth token is stored in this browser. Continue to step 2 to connect chat on the
               server.
             </p>
+            <div className="form-actions">
+              <button
+                type="button"
+                className="danger"
+                disabled={clearingToken}
+                onClick={handleLogout}
+              >
+                {clearingToken ? 'Logging out…' : 'Log out & clear token'}
+              </button>
+            </div>
           </>
         ) : (
           <>
@@ -193,6 +231,18 @@ export default function DashboardSetup({
               <a className="setup-step__oauth-link" href={oauthUrl}>
                 Connect with Twitch
               </a>
+            ) : null}
+            {config?.hasToken ? (
+              <div className="form-actions" style={{ marginTop: '0.75rem' }}>
+                <button
+                  type="button"
+                  className="danger"
+                  disabled={clearingToken}
+                  onClick={handleLogout}
+                >
+                  {clearingToken ? 'Clearing…' : 'Clear server token'}
+                </button>
+              </div>
             ) : null}
           </>
         )}
@@ -242,6 +292,16 @@ export default function DashboardSetup({
                   Reconnect IRC
                 </button>
               ) : null}
+              {(config?.hasToken || oauthComplete) && (
+                <button
+                  type="button"
+                  className="danger"
+                  disabled={clearingToken}
+                  onClick={handleLogout}
+                >
+                  {clearingToken ? 'Logging out…' : 'Log out & clear token'}
+                </button>
+              )}
             </div>
 
             {tokenError ? <p className="setup-step__error">{tokenError.message}</p> : null}
@@ -369,7 +429,12 @@ export default function DashboardSetup({
 
             <div className="card setup-step__question-card">
               <h3 className="setup-step__section-title">Question bank</h3>
-              <QuestionManager embedded activeRound={round} onRoundChange={setRound} />
+              <QuestionManager
+                embedded
+                activeRound={round}
+                onRoundChange={setRound}
+                onActionError={onActionError}
+              />
             </div>
           </div>
 

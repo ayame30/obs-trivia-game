@@ -126,7 +126,10 @@ export const SET_TWITCH_TOKEN = gql`
 export const START_QUESTION = gql`
   mutation StartQuestion($questionId: ID!) {
     startQuestion(questionId: $questionId) {
-      ...RoundFields
+      round {
+        ...RoundFields
+      }
+      warning
     }
   }
   ${ROUND_FIELDS}
@@ -194,6 +197,12 @@ export const ROUNDS_RESET = gql`
 export const RECONNECT_TWITCH = gql`
   mutation ReconnectTwitchChat {
     reconnectTwitchChat
+  }
+`;
+
+export const CLEAR_TWITCH_TOKEN = gql`
+  mutation ClearTwitchToken {
+    clearTwitchToken
   }
 `;
 

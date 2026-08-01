@@ -22,6 +22,7 @@ import {
   TwitchConfigModel,
   UpdateAppSettingsInput,
   AppSettingsModel,
+  StartQuestionPayload,
   UpdateQuestionInput,
   VoteCountsModel,
 } from './models';
@@ -132,11 +133,15 @@ export class TriviaResolver {
     };
   }
 
-  @Mutation(() => RoundModel)
+  @Mutation(() => StartQuestionPayload)
   async startQuestion(@Args('questionId', { type: () => ID }) questionId: string) {
     const round = await this.roundsService.startRound(Number(questionId));
     this.chatMonitor.onQuestionStarted(round);
-    return this.roundEventsService.publishQuestionStarted(round);
+    const mapped = await this.roundEventsService.publishQuestionStarted(round);
+    const warning = this.chatMonitor.isConnected()
+      ? null
+      : 'Twitch chat is not connected. The question is live, but chat votes will not be counted until IRC is connected.';
+    return { round: mapped, warning };
   }
 
   @Mutation(() => RoundModel)
@@ -190,6 +195,13 @@ export class TriviaResolver {
   @Mutation(() => Boolean)
   reconnectTwitchChat() {
     return this.chatMonitor.connect();
+  }
+
+  @Mutation(() => Boolean)
+  async clearTwitchToken() {
+    this.chatMonitor.disconnect();
+    await this.twitchConfigService.clearConfig();
+    return true;
   }
 
   @Mutation(() => Boolean)
