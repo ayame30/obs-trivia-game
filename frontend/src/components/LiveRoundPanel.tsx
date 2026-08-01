@@ -13,6 +13,7 @@ const OPTION_KEYS: AnswerChoice[] = ['A', 'B', 'C', 'D'];
 
 export default function LiveRoundPanel({
   round,
+  showCorrect = false,
   countdownVariant = 'default',
 }: LiveRoundPanelProps) {
   if (!round) {
@@ -45,8 +46,12 @@ export default function LiveRoundPanel({
         <div className="live-round-panel__options">
           {OPTION_KEYS.map((key) => {
             const count = round.voteCounts?.[key];
+            const isCorrect = showCorrect && q.correctAnswer === key;
             return (
-              <div key={key} className="live-round-panel__option">
+              <div
+                key={key}
+                className={`live-round-panel__option${isCorrect ? ' live-round-panel__option--correct' : ''}`}
+              >
                 <span className="live-round-panel__option_label">{key}</span>
                 <ResizeText text={q[`option${key}`]} />
                 {count ? (
