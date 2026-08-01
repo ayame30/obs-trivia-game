@@ -72,7 +72,7 @@ export default function Layout() {
           <div className="close-confirm__panel">
             <h2 id="close-confirm-title">Close Obs Trivia game?</h2>
             <p>
-              All OBS overlays will stop working until you turn the server on again by opening this
+              All Trivia Game overlays will stop working until you turn the server on again by opening this
               app.
             </p>
             <div className="close-confirm__actions">
