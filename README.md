@@ -1,70 +1,94 @@
 # Obs Trivia game
 
-Apollo Server + SQLite backend for Twitch chat trivia: ABCD questions, live vote counts, scoreboard, and GraphQL subscriptions.
+Twitch chat trivia with live OBS overlays (ABCD votes, scoreboard, countdown).
 
-React frontend (`frontend/`) uses Apollo Client 4 with `graphql-ws` subscriptions.
+## For streamers (no coding)
 
-## Setup
+1. Download the Windows build (`ObsTriviaGame-*-Setup.exe` installer, or the portable `.exe`).
+2. Install / double-click to open **Obs Trivia game**.
+3. Sign in with Twitch in the app and finish the setup steps.
+4. In OBS or Streamlabs, add **Browser Sources**:
+   - Trivia overlay: `http://localhost:5000/overlay`
+   - Scoreboard: `http://localhost:5000/scoreboard-overlay`
+5. Keep the app **running** while you stream.
 
-### Backend
+To stop: close the app window.
+
+If Windows SmartScreen appears, choose **More info** → **Run anyway**.
+
+---
+
+## For developers
+
+### Requirements
+
+- Node.js 22.5+
+
+### Setup
 
 ```bash
-cd stream-trivia
 cp .env.example .env
-# Set TWITCH_CLIENT_ID (same as React app) in .env
+# Set TWITCH_CLIENT_ID
+
+cd frontend
+cp .env.example .env
+# Set VITE_TWITCH_CLIENT_ID (same value)
 npm install
+cd ..
+npm install
+```
+
+### Run API only
+
+```bash
 npm run dev
 ```
 
-Build the frontend, then the backend serves it at the site root (same port as GraphQL):
+### Build UI + API, then start
 
 ```bash
-cd frontend
-cp .env.example .env
-# VITE_TWITCH_CLIENT_ID — same Twitch app as backend
-npm install
-npm run build
-cd ..
 npm run build:start
-# or: npm run build && npm start
 ```
 
-App (dashboard): `http://localhost:4000/`  
-OBS overlay (transparent): `http://localhost:4000/overlay`  
-Twitch OAuth: `http://localhost:4000/auth`  
-GraphQL: `http://localhost:4000/graphql`  
-WebSocket subscriptions: `ws://localhost:4000/graphql`
+App: `http://localhost:5000/`  
+OBS overlay: `http://localhost:5000/overlay`  
+Scoreboard overlay: `http://localhost:5000/scoreboard-overlay`  
+Twitch OAuth redirect: `http://localhost:5000/` (register this URI on your Twitch app)
 
-### Frontend dev (optional)
-
-For hot reload during UI work, run the API (`npm run dev` in project root) and Vite in another terminal:
+### Frontend hot reload (optional)
 
 ```bash
+# terminal 1
+npm run dev
+
+# terminal 2
 cd frontend && npm run dev
 ```
 
-Vite proxies `/graphql` to the backend. Dashboard: `http://localhost:3001`
+Vite proxies `/graphql` to the API. UI: `http://localhost:3001`  
+OAuth still redirects to port **5000** when using Vite (see `VITE_TWITCH_REDIRECT_ORIGIN`).
 
-## Twitch OAuth
+### Electron desktop app
 
-Save the broadcaster OAuth token (from your existing Twitch login flow):
+```bash
+# Dev: builds server+UI, opens Electron window
+npm run electron:dev
 
-```graphql
-mutation {
-  setTwitchToken(
-    accessToken: "YOUR_OAUTH_TOKEN"
-    channel: "your_channel_login"
-  ) {
-    login
-    channel
-    hasToken
-  }
-}
+# Windows installer + portable exe → release/
+npm run dist:win
 ```
 
-Chat is monitored on that channel. Viewers vote by sending **A**, **B**, **C**, or **D** (or `!A`, etc.) — one vote per user per round.
+`dist:win` packs Nest + production `node_modules` into `electron-resources/server`, then runs electron-builder.
 
-## Questions
+---
+
+## Twitch chat votes
+
+Viewers vote by sending **A**, **B**, **C**, or **D** (or `!A`, etc.) — one vote per user per round.
+
+## GraphQL (developers)
+
+### Questions
 
 ```graphql
 mutation {
@@ -82,23 +106,20 @@ mutation {
 }
 ```
 
-## Live round
+### Live round
 
 ```graphql
-# Start — subscribers receive questionStarted (correctAnswer hidden)
-mutation { startQuestion(questionId: "1") { id question { text optionA } } }
+mutation { startQuestion(questionId: "1") { round { id } warning } }
 
-# Stop — reveals answer, updates scoreboard, fires questionEnded + scoreboardUpdated
 mutation { stopQuestion { id question { correctAnswer } voteCounts { A B C D total } } }
 ```
 
-## Subscriptions (frontend)
+### Subscriptions
 
 ```graphql
 subscription {
   questionStarted {
     id
-    startedAt
     question { text optionA optionB optionC optionD }
     voteCounts { A B C D total }
   }
@@ -126,8 +147,6 @@ subscription {
 
 Correct answers award +1 point on `stopQuestion`. Use `resetScoreboard` to clear scores.
 
-Batch manual adjustments (publishes `scoreboardUpdated`):
-
 ```graphql
 mutation {
   updateScoreboard(updates: [
@@ -141,6 +160,6 @@ mutation {
 }
 ```
 
-Each item must include **exactly one** of `score` (set absolute value) or `delta` (add/subtract). Only existing scoreboard rows can be updated; unknown `twitchUserId` values are rejected. Scores never go below 0.
+Each item must include **exactly one** of `score` or `delta`. Scores never go below 0.
 
-Use `resetRounds` to clear all rounds/votes and reset the round counter (next round starts at #1). Active rounds are cancelled without awarding points.
+Use `resetRounds` to clear rounds/votes and reset the round counter.

@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router';
 import { TriviaLiveProvider } from './context/TriviaLiveContext';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';

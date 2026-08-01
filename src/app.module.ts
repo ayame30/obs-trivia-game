@@ -42,7 +42,8 @@ import { TwitchModule } from './twitch/twitch.module';
     }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
-      autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
+      // In-memory schema — avoids writing src/schema.gql in packaged Electron builds
+      autoSchemaFile: true,
       sortSchema: true,
       subscriptions: {
         'graphql-ws': true,

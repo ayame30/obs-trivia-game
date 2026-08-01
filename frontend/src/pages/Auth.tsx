@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { useMutation } from '@apollo/client/react';
 import { useTwitchAuth } from '../hooks/useTwitchAuth';
 import { getTwitchClientId, getTwitchOAuthUrl } from '../lib/twitchOAuth';

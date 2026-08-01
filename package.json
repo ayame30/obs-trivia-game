@@ -1,7 +1,10 @@
 {
-  "name": "stream-trivia",
+  "name": "obs-trivia-game",
   "version": "1.0.0",
   "private": true,
+  "description": "Obs Trivia game — Twitch chat trivia for OBS overlays",
+  "author": "Obs Trivia game",
+  "main": "electron/main.cjs",
   "engines": {
     "node": ">=22.5.0"
   },
@@ -11,7 +14,10 @@
     "build:server": "nest build",
     "typecheck": "tsc --noEmit",
     "build": "npm run build:server && npm run build --prefix frontend",
-    "build:start": "npm run build && npm start"
+    "build:start": "npm run build && npm start",
+    "electron:dev": "npm run build && electron .",
+    "electron:prepare": "node scripts/prepare-electron-server.mjs",
+    "dist:win": "npm run build && npm run electron:prepare && electron-builder --win"
   },
   "dependencies": {
     "@as-integrations/express5": "^1.1.2",
@@ -30,13 +36,65 @@
     "rxjs": "^7.8.1",
     "sql.js": "^1.12.0",
     "typeorm": "^0.3.20",
-    "ws": "^8.18.0"
+    "ws": "^8.21.1"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^11.0.0",
     "@types/node": "^22.10.2",
     "@types/ws": "^8.5.13",
+    "electron": "^43.2.0",
+    "electron-builder": "^26.15.3",
     "typescript": "^5.7.2"
+  },
+  "overrides": {
+    "ws": "^8.21.1"
+  },
+  "build": {
+    "appId": "com.obstriviagame.app",
+    "productName": "Obs Trivia game",
+    "copyright": "Copyright © Obs Trivia game",
+    "directories": {
+      "output": "release",
+      "buildResources": "electron/build"
+    },
+    "files": [
+      "electron/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "electron-resources/server",
+        "to": "server"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "ObsTriviaGame-${version}-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Obs Trivia game"
+    },
+    "portable": {
+      "artifactName": "ObsTriviaGame-${version}-portable.${ext}"
+    }
   }
 }

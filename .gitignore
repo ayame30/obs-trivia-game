@@ -6,3 +6,7 @@ data/
 .env
 frontend/.env
 src/schema.gql
+schema.gql
+electron-resources/
+release/
+*.log

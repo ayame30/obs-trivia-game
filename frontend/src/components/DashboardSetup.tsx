@@ -67,7 +67,7 @@ export default function DashboardSetup({
 
   const { data: configData, refetch: refetchConfig } = useQuery<GetTwitchConfigData>(
     GET_TWITCH_CONFIG,
-    { pollInterval: 5000 }
+    { pollInterval: 30000 }
   );
   const { data: questionsData } = useQuery<GetQuestionsData>(GET_QUESTIONS);
   const config = configData?.twitchConfig;
@@ -178,6 +178,10 @@ export default function DashboardSetup({
     } catch {
       window.prompt('Copy this URL:', url);
     }
+  };
+  const onClickAcknowledgeOverlay = () => {
+    acknowledgeOverlay();
+    setOpenStep(4);
   };
 
   const oauthUrl = getTwitchOAuthUrl('/');
@@ -388,7 +392,7 @@ export default function DashboardSetup({
         </div>
 
         <div className="form-actions">
-          <button type="button" onClick={acknowledgeOverlay}>
+          <button type="button" onClick={onClickAcknowledgeOverlay}>
             {overlayAcknowledged ? 'Marked as added' : 'I added the overlays'}
           </button>
         </div>
