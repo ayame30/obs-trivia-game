@@ -16,14 +16,16 @@ const ResizeText = ({ text }: ResizeTextProps) => {
         justifyContent: 'center',
       }}
     >
-      <AutoTextSize mode="boxoneline">
-        {text.split('\n').map((line, index, arr) => (
-          <div key={index} style={{ fontWeight: 700 }}>
-            {line}
-            {index < arr.length - 1 && <br />}
-          </div>
-        ))}
-      </AutoTextSize>
+      <div>
+        <AutoTextSize mode="boxoneline">
+          {text.split('\n').map((line, index, arr) => (
+            <div key={index} style={{ fontWeight: 700 }}>
+              {line}
+              {index < arr.length - 1 && <br />}
+            </div>
+          ))}
+        </AutoTextSize>
+      </div>
     </div>
   );
 };
