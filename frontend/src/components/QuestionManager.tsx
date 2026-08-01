@@ -1,4 +1,4 @@
-import { useState, type FormEvent, type KeyboardEvent } from 'react';
+import { useEffect, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { useQuery, useMutation } from '@apollo/client/react';
 import {
   GET_QUESTIONS,
@@ -10,7 +10,17 @@ import {
   PAUSE_COUNTDOWN,
   RESUME_COUNTDOWN,
 } from '../graphql/operations';
-import type { AnswerChoice, Question, QuestionFormState, Round, GetQuestionsData, StartQuestionMutation, StopQuestionMutation, PauseCountdownMutation, ResumeCountdownMutation } from '../types';
+import type {
+  AnswerChoice,
+  Question,
+  QuestionFormState,
+  Round,
+  GetQuestionsData,
+  StartQuestionMutation,
+  StopQuestionMutation,
+  PauseCountdownMutation,
+  ResumeCountdownMutation,
+} from '../types';
 
 const emptyForm: QuestionFormState = {
   text: '',
@@ -35,10 +45,7 @@ function limitLines(value: string, maxLines = MAX_TEXT_ROWS): string {
   return lines.slice(0, maxLines).join('\n');
 }
 
-function blockExtraRows(
-  e: KeyboardEvent<HTMLTextAreaElement>,
-  value: string
-): void {
+function blockExtraRows(e: KeyboardEvent<HTMLTextAreaElement>, value: string): void {
   if (e.key === 'Enter' && lineCount(value) >= MAX_TEXT_ROWS) {
     e.preventDefault();
   }
@@ -53,18 +60,23 @@ interface QuestionManagerProps {
 export default function QuestionManager({ activeRound, onRoundChange, embedded }: QuestionManagerProps) {
   const [form, setForm] = useState<QuestionFormState>(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
 
   const { data, loading, refetch } = useQuery<GetQuestionsData>(GET_QUESTIONS);
+  const closeForm = () => {
+    setFormOpen(false);
+    setEditingId(null);
+    setForm(emptyForm);
+  };
   const [createQuestion, { loading: creating }] = useMutation(CREATE_QUESTION, {
     onCompleted: () => {
-      setForm(emptyForm);
+      closeForm();
       refetch();
     },
   });
   const [updateQuestion, { loading: updating }] = useMutation(UPDATE_QUESTION, {
     onCompleted: () => {
-      setForm(emptyForm);
-      setEditingId(null);
+      closeForm();
       refetch();
     },
   });
@@ -86,6 +98,15 @@ export default function QuestionManager({ activeRound, onRoundChange, embedded }
   const hasActive = activeRound?.status === 'active';
   const countdownPaused = activeRound?.countdownPaused;
 
+  useEffect(() => {
+    if (!formOpen) return;
+    const onKeyDown = (e: globalThis.KeyboardEvent) => {
+      if (e.key === 'Escape') closeForm();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [formOpen]);
+
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     const input = {
@@ -104,6 +125,12 @@ export default function QuestionManager({ activeRound, onRoundChange, embedded }
     }
   };
 
+  const openCreate = () => {
+    setEditingId(null);
+    setForm(emptyForm);
+    setFormOpen(true);
+  };
+
   const startEdit = (q: Question) => {
     setEditingId(q.id);
     setForm({
@@ -115,6 +142,7 @@ export default function QuestionManager({ activeRound, onRoundChange, embedded }
       correctAnswer: q.correctAnswer || 'A',
       countdownSeconds: q.countdownSeconds ?? 30,
     });
+    setFormOpen(true);
   };
 
   const optionKeys = ['optionA', 'optionB', 'optionC', 'optionD'] as const;
@@ -123,85 +151,16 @@ export default function QuestionManager({ activeRound, onRoundChange, embedded }
     <>
       {!embedded ? <h2>Question bank</h2> : null}
 
-      <form className="form-grid" onSubmit={handleSubmit}>
-        <div>
-          <label>Question</label>
-          <textarea
-            rows={MAX_TEXT_ROWS}
-            className="question-field--2-rows"
-            value={form.text}
-            onChange={(e) => setForm({ ...form, text: limitLines(e.target.value) })}
-            onKeyDown={(e) => blockExtraRows(e, form.text)}
-            required
-          />
-        </div>
-        <div className="grid-2">
-          {optionKeys.map((key, i) => (
-            <div key={key}>
-              <label>Option {String.fromCharCode(65 + i)}</label>
-              <textarea
-                rows={MAX_TEXT_ROWS}
-                className="question-field--2-rows"
-                value={form[key]}
-                onChange={(e) =>
-                  setForm({ ...form, [key]: limitLines(e.target.value) })
-                }
-                onKeyDown={(e) => blockExtraRows(e, form[key])}
-                required
-              />
-            </div>
-          ))}
-        </div>
-        <div className="grid-2">
-          <div>
-            <label>Correct answer</label>
-            <select
-              value={form.correctAnswer}
-              onChange={(e) =>
-                setForm({ ...form, correctAnswer: e.target.value as AnswerChoice })
-              }
-            >
-              <option value="A">A</option>
-              <option value="B">B</option>
-              <option value="C">C</option>
-              <option value="D">D</option>
-            </select>
-          </div>
-          <div>
-            <label>Countdown (seconds)</label>
-            <input
-              type="number"
-              min={5}
-              max={600}
-              value={form.countdownSeconds}
-              onChange={(e) => setForm({ ...form, countdownSeconds: e.target.value })}
-              required
-            />
-          </div>
-        </div>
-        <div className="form-actions">
-          <button type="submit" disabled={creating || updating}>
-            {editingId ? 'Save changes' : 'Add question'}
-          </button>
-          {editingId && (
-            <button
-              type="button"
-              className="secondary"
-              onClick={() => {
-                setEditingId(null);
-                setForm(emptyForm);
-              }}
-            >
-              Cancel
-            </button>
-          )}
-        </div>
-      </form>
+      <div className="question-manager__toolbar">
+        <button type="button" onClick={openCreate}>
+          Add question
+        </button>
+      </div>
 
       {loading ? (
         <p>Loading questions…</p>
       ) : (
-        <table className="question-table" style={{ marginTop: '1rem' }}>
+        <table className="question-table">
           <thead>
             <tr>
               <th>ID</th>
@@ -272,6 +231,90 @@ export default function QuestionManager({ activeRound, onRoundChange, embedded }
           </button>
         </div>
       )}
+
+      {formOpen ? (
+        <div className="modal-overlay" onClick={closeForm}>
+          <div
+            className="modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="question-form-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal__header">
+              <h3 id="question-form-title">{editingId ? 'Edit question' : 'New question'}</h3>
+              <button type="button" className="modal__close secondary" onClick={closeForm} aria-label="Close">
+                ×
+              </button>
+            </div>
+
+            <form className="form-grid modal__body" onSubmit={handleSubmit}>
+              <div>
+                <label>Question</label>
+                <textarea
+                  rows={MAX_TEXT_ROWS}
+                  className="question-field--2-rows"
+                  value={form.text}
+                  onChange={(e) => setForm({ ...form, text: limitLines(e.target.value) })}
+                  onKeyDown={(e) => blockExtraRows(e, form.text)}
+                  required
+                  autoFocus
+                />
+              </div>
+              <div className="grid-2">
+                {optionKeys.map((key, i) => (
+                  <div key={key}>
+                    <label>Option {String.fromCharCode(65 + i)}</label>
+                    <textarea
+                      rows={MAX_TEXT_ROWS}
+                      className="question-field--2-rows"
+                      value={form[key]}
+                      onChange={(e) => setForm({ ...form, [key]: limitLines(e.target.value) })}
+                      onKeyDown={(e) => blockExtraRows(e, form[key])}
+                      required
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="grid-2">
+                <div>
+                  <label>Correct answer</label>
+                  <select
+                    value={form.correctAnswer}
+                    onChange={(e) =>
+                      setForm({ ...form, correctAnswer: e.target.value as AnswerChoice })
+                    }
+                  >
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="C">C</option>
+                    <option value="D">D</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Countdown (seconds)</label>
+                  <input
+                    type="number"
+                    min={5}
+                    max={600}
+                    value={form.countdownSeconds}
+                    onChange={(e) => setForm({ ...form, countdownSeconds: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+              <div className="form-actions">
+                <button type="submit" disabled={creating || updating}>
+                  {creating || updating ? 'Saving…' : editingId ? 'Save changes' : 'Add question'}
+                </button>
+                <button type="button" className="secondary" onClick={closeForm}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
     </>
   );
 

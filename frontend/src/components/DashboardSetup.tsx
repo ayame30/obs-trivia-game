@@ -342,33 +342,38 @@ export default function DashboardSetup({
         open={openStep === 4}
         onToggle={() => setOpenStep(openStep === 4 ? 0 : 4)}
       >
-        <QuestionManager embedded activeRound={round} onRoundChange={setRound} />
-
-        <div className="grid-2 setup-step__live-grid">
-          <div className="card setup-step__live-card">
-            <div className="setup-step__live-header">
-              <h3>Live round preview</h3>
-              <button
-                type="button"
-                className="secondary"
-                disabled={resettingRounds}
-                onClick={() => {
-                  if (
-                    window.confirm(
-                      'Reset round #? This clears all round history and votes. The next round will start at #1. Active rounds are cancelled without scoring.'
-                    )
-                  ) {
-                    resetRounds();
-                  }
-                }}
-              >
-                Reset round #
-              </button>
+        <div className="setup-step__stream-layout">
+          <div className="setup-step__stream-main">
+            <div className="card setup-step__live-card">
+              <div className="setup-step__live-header">
+                <h3>Live round preview</h3>
+                <button
+                  type="button"
+                  className="secondary"
+                  disabled={resettingRounds}
+                  onClick={() => {
+                    if (
+                      window.confirm(
+                        'Reset round #? This clears all round history and votes. The next round will start at #1. Active rounds are cancelled without scoring.'
+                      )
+                    ) {
+                      resetRounds();
+                    }
+                  }}
+                >
+                  Reset round #
+                </button>
+              </div>
+              <LiveRoundPanel round={round} showCorrect={showCorrect} />
             </div>
-            <LiveRoundPanel round={round} showCorrect={showCorrect} />
+
+            <div className="card setup-step__question-card">
+              <h3 className="setup-step__section-title">Question bank</h3>
+              <QuestionManager embedded activeRound={round} onRoundChange={setRound} />
+            </div>
           </div>
 
-          <div className="card setup-step__live-card">
+          <div className="card setup-step__stream-scoreboard">
             <div className="setup-step__live-header">
               <h3>Scoreboard</h3>
               <button

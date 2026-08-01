@@ -82,7 +82,8 @@ label {
 }
 
 .layout {
-  max-width: 1100px;
+  max-width: 100%;
+  min-height: 100vh;
   margin: 0 auto;
   padding: 1.5rem;
   background-color: var(--bg);
@@ -439,10 +440,6 @@ label {
   max-width: 800px;
 }
 
-.live-round-panel__empty {
-  color: var(--muted);
-}
-
 .live-round-panel__stage {
   width: 100%;
   max-width: 800px;
@@ -711,7 +708,7 @@ label {
 }
 
 .setup-step__body {
-  padding: 0 1.15rem 1.15rem;
+  padding: 1.15rem;
   border-top: 1px solid var(--border);
 }
 
@@ -774,17 +771,35 @@ label {
   white-space: nowrap;
 }
 
-.setup-step__live-grid {
-  margin-top: 1.25rem;
+.setup-step__stream-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
+.setup-step__stream-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.setup-step__stream-scoreboard,
+.setup-step__question-card,
 .setup-step__live-card {
   margin-bottom: 0;
 }
 
-.setup-step__live-card h3 {
-  margin: 0;
+.setup-step__live-card h3,
+.setup-step__section-title {
+  margin: 0 0 0.75rem;
   font-size: 1rem;
+}
+
+@media (max-width: 900px) {
+  .setup-step__stream-main {
+    grid-template-columns: 1fr;
+  }
 }
 
 .setup-step__live-header {
@@ -799,6 +814,58 @@ label {
   padding-bottom: 0.25rem;
 }
 
+.question-manager__toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.75rem;
+}
+
 .question-manager--embedded .question-table {
-  margin-top: 1rem;
+  margin-top: 0;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.65);
+}
+
+.modal {
+  width: min(640px, 100%);
+  max-height: min(90vh, 900px);
+  overflow: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+}
+
+.modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1.15rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal__header h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.modal__close {
+  min-width: 2rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.modal__body {
+  padding: 1.15rem;
 }

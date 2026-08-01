@@ -14,8 +14,6 @@ export default function Layout() {
           <NavLink to="/" end>
             Dashboard
           </NavLink>
-          <NavLink to="/overlay">OBS overlay</NavLink>
-          <NavLink to="/auth">Twitch auth</NavLink>
         </nav>
       </header>
       <Outlet />

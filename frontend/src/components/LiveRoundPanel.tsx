@@ -1,5 +1,6 @@
 import CountdownDisplay from './CountdownDisplay';
 import ResizeText from './ResizeText';
+import { OVERLAY_PLACEHOLDER_ROUND } from '../constants/overlayPlaceholder';
 import type { AnswerChoice, Round } from '../types';
 
 interface LiveRoundPanelProps {
@@ -16,23 +17,17 @@ export default function LiveRoundPanel({
   showCorrect = false,
   countdownVariant = 'default',
 }: LiveRoundPanelProps) {
-  if (!round) {
-    return (
-      <p className="live-round-panel__empty">
-        No active round. Start a question from the question bank.
-      </p>
-    );
-  }
-
-  const q = round.question;
+  const isPlaceholder = round == null;
+  const displayRound = round ?? OVERLAY_PLACEHOLDER_ROUND;
+  const q = displayRound.question;
 
   return (
-    <div className="live-round-panel">
+    <div className={`live-round-panel${isPlaceholder ? ' live-round-panel--placeholder' : ''}`}>
       <div className="live-round-panel__stage">
         <div className="live-round-panel__question">
           <div className="live-round-panel__question_header">
             <div className="live-round-panel__question_count_text">
-              第{round.id}題
+              {isPlaceholder? '第0題' : `第${round?.id}題`}
             </div>
             <div className="live-round-panel__countdown-slot">
               <CountdownDisplay round={round} variant={countdownVariant} />
@@ -45,8 +40,8 @@ export default function LiveRoundPanel({
 
         <div className="live-round-panel__options">
           {OPTION_KEYS.map((key) => {
-            const count = round.voteCounts?.[key];
-            const isCorrect = showCorrect && q.correctAnswer === key;
+            const count = displayRound.voteCounts?.[key];
+            const isCorrect = showCorrect && !isPlaceholder && q.correctAnswer === key;
             return (
               <div
                 key={key}
