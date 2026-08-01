@@ -2,7 +2,7 @@
 export const OVERLAY_CSS_STYLE_GUIDE = `# Overlay CSS style guide (OBS)
 
 Use this when editing Obs Trivia game overlay custom CSS via MCP tools.
-Overrides apply to both \`/overlay\` and \`/scoreboard-overlay\` (injected as a \`<style>\` tag).
+Overrides apply to both \`/overlay/questions\` and \`/overlay/scoreboard\` (injected as a \`<style>\` tag).
 Source of truth for base overlay styles: \`frontend/src/styles/overlay.css\`.
 
 ## Rules

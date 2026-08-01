@@ -19,8 +19,10 @@ export default function App() {
             <Route path="auth" element={<Auth />} />
             <Route path="settings" element={<Settings />} />
           </Route>
-          <Route path="overlay" element={<Overlay />} />
-          <Route path="scoreboard-overlay" element={<ScoreboardOverlay />} />
+          <Route path="overlay">
+            <Route path="questions" element={<Overlay />} />
+            <Route path="scoreboard" element={<ScoreboardOverlay />} />
+          </Route>
         </Routes>
       </TriviaLiveProvider>
     </BrowserRouter>

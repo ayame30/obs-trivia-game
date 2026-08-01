@@ -16,8 +16,8 @@ async function bootstrap() {
   console.log(chalk.green('Successfully started Obs Trivia game'));
   console.log(chalk.green('--------------------------------'));
   console.log(chalk.green(`Obs Trivia game: ${base}`));
-  console.log(chalk.green(`Overlays: http://localhost:${port}/overlay`));
-  console.log(chalk.green(`Scoreboard Overlays: http://localhost:${port}/scoreboard-overlay`));
+  console.log(chalk.green(`Overlays: http://localhost:${port}/overlay/questions`));
+  console.log(chalk.green(`Scoreboard Overlays: http://localhost:${port}/overlay/scoreboard`));
   console.log(chalk.green(`Overlay CSS MCP: http://localhost:${port}/mcp`));
   console.log(chalk.blue('--------------------------------'));
 

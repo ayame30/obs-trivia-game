@@ -73,8 +73,8 @@ export default function DashboardSetup({
   const [overlayAcknowledged, acknowledgeOverlay] = useOverlayAcknowledged();
 
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
-  const overlayUrl = `${origin}/overlay`;
-  const scoreboardOverlayUrl = `${origin}/scoreboard-overlay`;
+  const overlayUrl = `${origin}/overlay/questions`;
+  const scoreboardOverlayUrl = `${origin}/overlay/scoreboard`;
 
   const { data: configData, refetch: refetchConfig } = useQuery<GetTwitchConfigData>(
     GET_TWITCH_CONFIG,
@@ -390,7 +390,7 @@ export default function DashboardSetup({
               <FaCopy aria-hidden />
               Copy
             </button>
-            <a href="/overlay" target="_blank" rel="noreferrer" className="setup-step__preview-link">
+            <a href="/overlay/questions" target="_blank" rel="noreferrer" className="setup-step__preview-link">
               <FaExternalLinkAlt aria-hidden />
               Preview
             </a>
@@ -407,7 +407,7 @@ export default function DashboardSetup({
               Copy
             </button>
             <a
-              href="/scoreboard-overlay"
+              href="/overlay/scoreboard"
               target="_blank"
               rel="noreferrer"
               className="setup-step__preview-link"

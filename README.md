@@ -8,8 +8,8 @@ Twitch chat trivia with live OBS overlays (ABCD votes, scoreboard, countdown).
 2. Install / double-click to open **Obs Trivia game**.
 3. Sign in with Twitch in the app and finish the setup steps.
 4. In OBS or Streamlabs, add **Browser Sources**:
-   - Trivia overlay: `http://localhost:4000/overlay`
-   - Scoreboard: `http://localhost:4000/scoreboard-overlay`
+   - Trivia overlay: `http://localhost:4000/overlay/questions`
+   - Scoreboard: `http://localhost:4000/overlay/scoreboard`
 5. Keep the app **running** while you stream.
 
 To stop: close the app window.
@@ -51,8 +51,8 @@ npm run build:start
 ```
 
 App: `http://localhost:4000/`  
-OBS overlay: `http://localhost:4000/overlay`  
-Scoreboard overlay: `http://localhost:4000/scoreboard-overlay`  
+OBS overlay: `http://localhost:4000/overlay/questions`  
+Scoreboard overlay: `http://localhost:4000/overlay/scoreboard`  
 Twitch OAuth redirect: `http://localhost:4000/` (register this URI on your Twitch app)
 
 ### Frontend hot reload (optional)
