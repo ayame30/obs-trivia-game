@@ -25,7 +25,7 @@ import type {
 } from '../types';
 
 const OVERLAY_ACK_KEY = 'stream_trivia_overlay_ack';
-const DEFAULT_TEST_MESSAGE = 'Stream Trivia chat test — if you see this, votes are ready!';
+const DEFAULT_TEST_MESSAGE = 'Obs Trivia game chat test — if you see this, votes are ready!';
 
 interface DashboardSetupProps {
   round: Round | null;

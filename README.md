@@ -1,4 +1,4 @@
-# Stream Trivia
+# Obs Trivia game
 
 Apollo Server + SQLite backend for Twitch chat trivia: ABCD questions, live vote counts, scoreboard, and GraphQL subscriptions.
 
