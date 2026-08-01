@@ -64,6 +64,7 @@ export interface AppSettings {
   showCutoffChat: boolean;
   cutoffChatMessage: string;
   scoreMultiplier: number;
+  overlayCustomCss: string;
   updatedAt: string;
 }
 
@@ -73,6 +74,7 @@ export interface AppSettingsFormState {
   showCutoffChat: boolean;
   cutoffChatMessage: string;
   scoreMultiplier: number | string;
+  overlayCustomCss: string;
 }
 
 export interface GetAppSettingsData {

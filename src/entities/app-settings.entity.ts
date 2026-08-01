@@ -12,6 +12,7 @@ export const SETTINGS_KEYS = {
   showCutoffChat: 'show_cutoff_chat',
   cutoffChatMessage: 'cutoff_chat_message',
   scoreMultiplier: 'score_multiplier',
+  overlayCustomCss: 'overlay_custom_css',
 } as const;
 
 export type SettingKey = (typeof SETTINGS_KEYS)[keyof typeof SETTINGS_KEYS];
@@ -22,6 +23,7 @@ export const SETTINGS_DEFAULTS: Record<SettingKey, string> = {
   [SETTINGS_KEYS.showCutoffChat]: 'true',
   [SETTINGS_KEYS.cutoffChatMessage]: DEFAULT_CUTOFF_CHAT_MESSAGE,
   [SETTINGS_KEYS.scoreMultiplier]: String(DEFAULT_SCORE_MULTIPLIER),
+  [SETTINGS_KEYS.overlayCustomCss]: '',
 };
 
 @Entity('app_settings')

@@ -14,6 +14,7 @@ const emptyForm: AppSettingsFormState = {
   showCutoffChat: true,
   cutoffChatMessage: '',
   scoreMultiplier: 10,
+  overlayCustomCss: '',
 };
 
 export default function Settings() {
@@ -32,6 +33,7 @@ export default function Settings() {
           showCutoffChat: s.showCutoffChat,
           cutoffChatMessage: s.cutoffChatMessage,
           scoreMultiplier: s.scoreMultiplier,
+          overlayCustomCss: s.overlayCustomCss ?? '',
         });
         setSaved(true);
       },
@@ -47,6 +49,7 @@ export default function Settings() {
       showCutoffChat: s.showCutoffChat,
       cutoffChatMessage: s.cutoffChatMessage,
       scoreMultiplier: s.scoreMultiplier,
+      overlayCustomCss: s.overlayCustomCss ?? '',
     });
   }, [data]);
 
@@ -65,6 +68,7 @@ export default function Settings() {
           showCutoffChat: form.showCutoffChat,
           cutoffChatMessage: form.cutoffChatMessage,
           scoreMultiplier: multiplier,
+          overlayCustomCss: form.overlayCustomCss,
         },
       },
     });
@@ -83,7 +87,7 @@ export default function Settings() {
     <div className="card settings-page">
       <h2>Settings</h2>
       <p className="setup-step__hint">
-        Configure Twitch chat announcements and how scores are displayed on overlays.
+        Configure Twitch chat announcements, score display, and overlay styling.
       </p>
 
       <form className="form-grid" onSubmit={handleSubmit}>
@@ -171,6 +175,29 @@ export default function Settings() {
           {multiplierInvalid ? (
             <p className="setup-step__error">Score multiplier must be a positive integer (not 0 or negative).</p>
           ) : null}
+        </section>
+
+        <section className="settings-section">
+          <h3>Overlay custom CSS</h3>
+          <p className="setup-step__hint">
+            Applied to both the trivia and scoreboard OBS overlays. Useful selectors:{' '}
+            <code>.overlay-page</code>, <code>.overlay-card</code>, <code>.live-round-panel</code>,{' '}
+            <code>.scoreboard-list</code>. Changes apply within a few seconds (or refresh the browser
+            source).
+          </p>
+          <label htmlFor="overlay-custom-css">CSS</label>
+          <textarea
+            id="overlay-custom-css"
+            className="settings-css-editor"
+            rows={12}
+            spellCheck={false}
+            placeholder={'.overlay-card {\n  font-size: 1.25rem;\n}'}
+            value={form.overlayCustomCss}
+            onChange={(e) => {
+              setSaved(false);
+              setForm({ ...form, overlayCustomCss: e.target.value });
+            }}
+          />
         </section>
 
         <div className="form-actions">

@@ -224,6 +224,9 @@ export class AppSettingsModel {
   scoreMultiplier!: number;
 
   @Field()
+  overlayCustomCss!: string;
+
+  @Field()
   updatedAt!: string;
 }
 
@@ -243,6 +246,9 @@ export class UpdateAppSettingsInput {
 
   @Field(() => Int, { nullable: true })
   scoreMultiplier?: number;
+
+  @Field({ nullable: true })
+  overlayCustomCss?: string;
 }
 
 @ObjectType()

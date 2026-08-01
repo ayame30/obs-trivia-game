@@ -1,4 +1,5 @@
 import LiveRoundPanel from '../components/LiveRoundPanel';
+import OverlayCustomStyles from '../components/OverlayCustomStyles';
 import { useTriviaLive } from '../hooks/useTriviaLive';
 
 /** Transparent OBS browser source — subscribe-only live view */
@@ -8,6 +9,7 @@ export default function Overlay() {
 
   return (
     <div className="overlay-page">
+      <OverlayCustomStyles />
       <div className="overlay-card show">
         <LiveRoundPanel round={round} showCorrect={showCorrect} countdownVariant="overlay" />
       </div>

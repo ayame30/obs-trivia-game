@@ -17,6 +17,7 @@ export interface AppSettingsValues {
   showCutoffChat: boolean;
   cutoffChatMessage: string;
   scoreMultiplier: number;
+  overlayCustomCss: string;
   updatedAt: string;
 }
 
@@ -26,6 +27,7 @@ export type UpdateAppSettingsInput = Partial<{
   showCutoffChat: boolean;
   cutoffChatMessage: string;
   scoreMultiplier: number;
+  overlayCustomCss: string;
 }>;
 
 @Injectable()
@@ -74,6 +76,9 @@ export class SettingsService implements OnModuleInit {
         throw new Error('Score multiplier must be a positive integer');
       }
       await this.setValue(SETTINGS_KEYS.scoreMultiplier, String(multiplier));
+    }
+    if (input.overlayCustomCss !== undefined) {
+      await this.setValue(SETTINGS_KEYS.overlayCustomCss, input.overlayCustomCss);
     }
 
     this.cache = null;
@@ -129,6 +134,7 @@ export class SettingsService implements OnModuleInit {
         Number.isInteger(scoreMultiplier) && scoreMultiplier > 0
           ? scoreMultiplier
           : DEFAULT_SCORE_MULTIPLIER,
+      overlayCustomCss: get(SETTINGS_KEYS.overlayCustomCss) ?? '',
       updatedAt: latestUpdated || new Date().toISOString(),
     };
     this.cache = values;

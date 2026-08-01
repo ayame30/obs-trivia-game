@@ -1475,6 +1475,14 @@ label {
   width: auto;
 }
 
+.settings-css-editor {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  resize: vertical;
+  min-height: 12rem;
+}
+
 .modal-overlay {
   position: fixed;
   inset: 0;

@@ -1,3 +1,4 @@
+import OverlayCustomStyles from '../components/OverlayCustomStyles';
 import ScoreboardPanel from '../components/ScoreboardPanel';
 import { useTriviaLive } from '../hooks/useTriviaLive';
 
@@ -7,6 +8,7 @@ export default function ScoreboardOverlay() {
 
   return (
     <div className="overlay-page">
+      <OverlayCustomStyles />
       <div className="overlay-card" style={{ marginTop: '1rem' }}>
         <ScoreboardPanel entries={scoreboard} />
       </div>

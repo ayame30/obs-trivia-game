@@ -225,6 +225,7 @@ export const GET_APP_SETTINGS = gql`
       showCutoffChat
       cutoffChatMessage
       scoreMultiplier
+      overlayCustomCss
       updatedAt
     }
   }
@@ -238,6 +239,7 @@ export const UPDATE_APP_SETTINGS = gql`
       showCutoffChat
       cutoffChatMessage
       scoreMultiplier
+      overlayCustomCss
       updatedAt
     }
   }
