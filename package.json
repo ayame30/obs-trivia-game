@@ -65,7 +65,18 @@
     "extraResources": [
       {
         "from": "electron-resources/server",
-        "to": "server"
+        "to": "server",
+        "filter": [
+          "**/*",
+          "!node_modules/**"
+        ]
+      },
+      {
+        "from": "electron-resources/server/node_modules",
+        "to": "server/node_modules",
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "win": {

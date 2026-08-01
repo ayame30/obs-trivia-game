@@ -11,6 +11,9 @@ let serverProcess = null;
 /** @type {BrowserWindow | null} */
 let mainWindow = null;
 let isQuitting = false;
+/** @type {string[]} */
+const serverLogLines = [];
+const MAX_LOG_LINES = 80;
 
 function isPackaged() {
   return app.isPackaged;
@@ -24,8 +27,28 @@ function getServerRoot() {
 }
 
 function getPort() {
-  const fromEnv = Number(process.env.PORT);
-  return Number.isFinite(fromEnv) && fromEnv > 0 ? fromEnv : DEFAULT_PORT;
+  return DEFAULT_PORT;
+}
+
+function getServerLogPath() {
+  return path.join(app.getPath('userData'), 'server.log');
+}
+
+function appendServerLog(chunk) {
+  const text = String(chunk);
+  process.stdout.write(`[server] ${text}`);
+  for (const line of text.split(/\r?\n/)) {
+    if (!line) continue;
+    serverLogLines.push(line);
+    if (serverLogLines.length > MAX_LOG_LINES) {
+      serverLogLines.shift();
+    }
+  }
+  try {
+    fs.appendFileSync(getServerLogPath(), text);
+  } catch {
+    // ignore log write failures
+  }
 }
 
 function readTwitchClientId(serverRoot) {
@@ -79,6 +102,14 @@ function startNestServer() {
     throw new Error(`Server entry not found:\n${entry}\nRun npm run build first.`);
   }
 
+  const nodeModules = path.join(serverRoot, 'node_modules');
+  if (!fs.existsSync(nodeModules)) {
+    throw new Error(
+      `Server dependencies missing:\n${nodeModules}\n` +
+        'Rebuild with npm run dist:win (includeSubNodeModules).'
+    );
+  }
+
   const clientId = readTwitchClientId(serverRoot);
   if (!clientId) {
     throw new Error(
@@ -90,6 +121,11 @@ function startNestServer() {
   const userData = app.getPath('userData');
   const databasePath = path.join(userData, 'data', 'obs-trivia-game.db');
   fs.mkdirSync(path.dirname(databasePath), { recursive: true });
+  try {
+    fs.writeFileSync(getServerLogPath(), `Starting server ${new Date().toISOString()}\nPORT=${port}\nROOT=${serverRoot}\n`);
+  } catch {
+    // ignore
+  }
 
   const env = {
     ...process.env,
@@ -104,19 +140,19 @@ function startNestServer() {
     stdio: ['ignore', 'pipe', 'pipe'],
   });
 
-  serverProcess.stdout?.on('data', (chunk) => {
-    process.stdout.write(`[server] ${chunk}`);
-  });
-  serverProcess.stderr?.on('data', (chunk) => {
-    process.stderr.write(`[server] ${chunk}`);
-  });
+  serverProcess.stdout?.on('data', appendServerLog);
+  serverProcess.stderr?.on('data', appendServerLog);
 
   serverProcess.on('exit', (code, signal) => {
     serverProcess = null;
     if (!isQuitting) {
+      const tail = serverLogLines.slice(-25).join('\n');
+      const detail = tail
+        ? `\n\nLast server output:\n${tail}\n\nFull log:\n${getServerLogPath()}`
+        : `\n\nNo server output captured.\nLog file:\n${getServerLogPath()}`;
       dialog.showErrorBox(
         'Obs Trivia game',
-        `The local server stopped unexpectedly (${signal || code || 'unknown'}).`
+        `The local server stopped unexpectedly (${signal || code || 'unknown'}).${detail}`
       );
       app.quit();
     }
@@ -171,7 +207,11 @@ async function bootstrap() {
     await createWindow(port);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    dialog.showErrorBox('Obs Trivia game failed to start', message);
+    const tail = serverLogLines.slice(-25).join('\n');
+    dialog.showErrorBox(
+      'Obs Trivia game failed to start',
+      tail ? `${message}\n\nLast server output:\n${tail}` : message
+    );
     stopNestServer();
     app.quit();
   }
