@@ -578,14 +578,18 @@ label {
   display: flex;
   align-items: center;
   justify-content: center;
-  bottom: -30%;
-  right: -10%;
-  font-size: 1rem;
-  line-height: 1em;
+  bottom: 0.5rem;
+  right: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
   background: #df683f;
-  min-width: 30px;
-  height: 30px;
-  border-radius: 100%;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  z-index: 1;
 }
 
 .live-round-panel__countdown-slot {
