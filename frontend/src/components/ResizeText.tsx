@@ -6,17 +6,8 @@ interface ResizeTextProps {
 
 const ResizeText = ({ text }: ResizeTextProps) => {
   return (
-    <div
-      style={{
-        display: 'flex',
-        width: '100%',
-        height: '100%',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
-      <div>
+    <div className="resize-text">
+      <div className="resize-text__inner">
         <AutoTextSize mode="boxoneline">
           {text.split('\n').map((line, index, arr) => (
             <div key={index} style={{ fontWeight: 700 }}>

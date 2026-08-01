@@ -1,6 +1,6 @@
 import CountdownDisplay from './CountdownDisplay';
 import ResizeText from './ResizeText';
-import type { Round } from '../types';
+import type { AnswerChoice, Round } from '../types';
 
 interface LiveRoundPanelProps {
   round: Round | null | undefined;
@@ -9,14 +9,15 @@ interface LiveRoundPanelProps {
   countdownVariant?: 'default' | 'overlay';
 }
 
+const OPTION_KEYS: AnswerChoice[] = ['A', 'B', 'C', 'D'];
+
 export default function LiveRoundPanel({
   round,
-  showCorrect = false,
   countdownVariant = 'default',
 }: LiveRoundPanelProps) {
   if (!round) {
     return (
-      <p style={{ color: 'var(--muted)' }}>
+      <p className="live-round-panel__empty">
         No active round. Start a question from the question bank.
       </p>
     );
@@ -25,208 +26,37 @@ export default function LiveRoundPanel({
   const q = round.question;
 
   return (
-    <div>
-      <div
-        style={{
-          width: '800px',
-          position: 'relative',
-          fontSize: 0,
-        }}
-      >
-        <img src="/IMG_21401.png" alt={`Round #${round.id}`} style={{ width: '100%', height: 'auto' }} />
-        {showCorrect && q.correctAnswer === 'A' && (
-          <img
-            src="/A.png"
-            alt={`Round #${round.id}`}
-            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
-          />
-        )}
-        {showCorrect && q.correctAnswer === 'B' && (
-          <img
-            src="/B.png"
-            alt={`Round #${round.id}`}
-            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
-          />
-        )}
-        {showCorrect && q.correctAnswer === 'C' && (
-          <img
-            src="/C.png"
-            alt={`Round #${round.id}`}
-            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
-          />
-        )}
-        {showCorrect && q.correctAnswer === 'D' && (
-          <img
-            src="/D.png"
-            alt={`Round #${round.id}`}
-            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
-          />
-        )}
-
-        <div
-          style={{
-            position: 'absolute',
-            top: '12.5%',
-            color: '#000',
-            fontWeight: 500,
-            textAlign: 'center',
-            left: '10%',
-            width: '80%',
-            height: '25%',
-          }}
-        >
-          <ResizeText text={q.text} />
-        </div>
-        <div
-          style={{
-            color: '#000',
-            fontWeight: 500,
-            textAlign: 'center',
-            position: 'absolute',
-            top: '54%',
-            left: '18%',
-            width: '28%',
-            height: '15%',
-          }}
-        >
-          <ResizeText text={q.optionA} />
-          {round?.voteCounts?.A ? (
-            <div
-              style={{
-                position: 'absolute',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                bottom: '-30%',
-                right: '-10%',
-                fontSize: '1rem',
-                lineHeight: '1em',
-                background: '#DF683F',
-                minWidth: '30px',
-                height: '30px',
-                borderRadius: '100%',
-              }}
-            >
-              <span>{round?.voteCounts?.A}</span>
+    <div className="live-round-panel">
+      <div className="live-round-panel__stage">
+        <div className="live-round-panel__question">
+          <div className="live-round-panel__question_header">
+            <div className="live-round-panel__question_count_text">
+              第{round.id}題
             </div>
-          ) : null}
-        </div>
-        <div
-          style={{
-            position: 'absolute',
-            color: '#000',
-            fontWeight: 500,
-            textAlign: 'center',
-            top: '52%',
-            left: '63%',
-            width: '28%',
-            height: '15%',
-          }}
-        >
-          <ResizeText text={q.optionB} />
-          {round?.voteCounts?.B ? (
-            <div
-              style={{
-                position: 'absolute',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                bottom: '-30%',
-                right: '-10%',
-                fontSize: '1rem',
-                lineHeight: '1em',
-                background: '#DF683F',
-                minWidth: '30px',
-                height: '30px',
-                borderRadius: '100%',
-              }}
-            >
-              <span>{round?.voteCounts?.B}</span>
+            <div className="live-round-panel__countdown-slot">
+              <CountdownDisplay round={round} variant={countdownVariant} />
             </div>
-          ) : null}
-        </div>
-        <div
-          style={{
-            position: 'absolute',
-            color: '#000',
-            fontWeight: 500,
-            textAlign: 'center',
-            top: '78.5%',
-            left: '18%',
-            width: '28%',
-            height: '15%',
-          }}
-        >
-          <ResizeText text={q.optionC} />
-          {round?.voteCounts?.C ? (
-            <div
-              style={{
-                position: 'absolute',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                bottom: '-30%',
-                right: '-10%',
-                fontSize: '1rem',
-                lineHeight: '1em',
-                background: '#DF683F',
-                minWidth: '30px',
-                height: '30px',
-                borderRadius: '100%',
-              }}
-            >
-              <span>{round?.voteCounts?.C}</span>
-            </div>
-          ) : null}
-        </div>
-        <div
-          style={{
-            position: 'absolute',
-            color: '#000',
-            fontWeight: 500,
-            textAlign: 'center',
-            top: '77%',
-            left: '63%',
-            width: '28%',
-            height: '15%',
-          }}
-        >
-          <ResizeText text={q.optionD} />
-          {round?.voteCounts?.D ? (
-            <div
-              style={{
-                position: 'absolute',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                bottom: '-30%',
-                right: '-10%',
-                fontSize: '1rem',
-                lineHeight: '1em',
-                background: '#DF683F',
-                minWidth: '30px',
-                height: '30px',
-                borderRadius: '100%',
-              }}
-            >
-              <span>{round?.voteCounts?.D}</span>
-            </div>
-          ) : null}
+          </div>
+          <div className="live-round-panel__question_text">
+            <ResizeText text={q.text} />
+          </div>
         </div>
 
-        <div
-          style={{
-            zIndex: 2,
-            position: 'absolute',
-            fontWeight: 500,
-            textAlign: 'center',
-            top: '4.5%',
-            right: '4.5%',
-            width: '10%',
-            height: '15%',
-          }}
-        >
-          <CountdownDisplay round={round} variant={countdownVariant} />
+        <div className="live-round-panel__options">
+          {OPTION_KEYS.map((key) => {
+            const count = round.voteCounts?.[key];
+            return (
+              <div key={key} className="live-round-panel__option">
+                <span className="live-round-panel__option_label">{key}</span>
+                <ResizeText text={q[`option${key}`]} />
+                {count ? (
+                  <div className="live-round-panel__vote-count">
+                    <span>{count}</span>
+                  </div>
+                ) : null}
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
