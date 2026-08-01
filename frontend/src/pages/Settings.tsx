@@ -94,7 +94,7 @@ export default function Settings() {
               checked={form.showQuestionChat}
               onChange={(e) => setForm({ ...form, showQuestionChat: e.target.checked })}
             />
-            Post question message to Twitch chat when a round starts
+            Enable
           </label>
           <label htmlFor="question-chat-template">Message template</label>
           <textarea
@@ -130,9 +130,9 @@ export default function Settings() {
               checked={form.showCutoffChat}
               onChange={(e) => setForm({ ...form, showCutoffChat: e.target.checked })}
             />
-            Post cutoff message when countdown ends
+            Enable
           </label>
-          <label htmlFor="cutoff-chat-message">Cutoff message</label>
+          <label htmlFor="cutoff-chat-message">Message template</label>
           <textarea
             id="cutoff-chat-message"
             rows={2}

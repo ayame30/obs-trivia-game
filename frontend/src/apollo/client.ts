@@ -5,6 +5,11 @@ import { OperationTypeNode } from 'graphql';
 
 const httpUri = import.meta.env.VITE_GRAPHQL_HTTP || '/graphql';
 
+/** Dispatched on `window` when the GraphQL WS link connects or closes. */
+export const GRAPHQL_WS_STATUS_EVENT = 'obs-trivia:graphql-ws-status';
+
+export type GraphqlWsStatusDetail = { status: 'connected' | 'closed' };
+
 function resolveWsUri(): string {
   if (import.meta.env.VITE_GRAPHQL_WS) {
     return import.meta.env.VITE_GRAPHQL_WS;
@@ -20,14 +25,32 @@ const wsUri = resolveWsUri();
 
 const httpLink = new HttpLink({ uri: httpUri });
 
+function emitWsStatus(status: GraphqlWsStatusDetail['status']) {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(
+    new CustomEvent<GraphqlWsStatusDetail>(GRAPHQL_WS_STATUS_EVENT, { detail: { status } })
+  );
+}
+
 const wsLink = new GraphQLWsLink(
   createClient({
     url: wsUri,
+    lazy: false,
     retryAttempts: Infinity,
     shouldRetry: () => true,
+    retryWait: async (retries) => {
+      const ms = Math.min(1000 * 2 ** retries, 15000);
+      await new Promise((resolve) => setTimeout(resolve, ms));
+    },
     on: {
-      connected: () => console.info('[graphql-ws] connected', wsUri),
-      closed: () => console.warn('[graphql-ws] closed'),
+      connected: () => {
+        console.info('[graphql-ws] connected', wsUri);
+        emitWsStatus('connected');
+      },
+      closed: () => {
+        console.warn('[graphql-ws] closed');
+        emitWsStatus('closed');
+      },
       error: (err) => console.error('[graphql-ws] error', err),
     },
   })

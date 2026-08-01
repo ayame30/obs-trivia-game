@@ -82,7 +82,7 @@ export default function Layout() {
                 Cancel
               </button>
               <button type="button" className="close-confirm__confirm" onClick={handleConfirmClose}>
-                Continue
+                Close Application
               </button>
             </div>
           </div>

@@ -16,7 +16,7 @@
   --vote-c: #f5a623;
   --vote-d: #f25f5c;
   --scrollbar-size: 10px;
-  --scrollbar-track: transparent;
+  --scrollbar-track: #151821;
   --scrollbar-thumb: #3a4156;
   --scrollbar-thumb-hover: #525b75;
   font-family: 'Noto Sans TC', 'Segoe UI', system-ui, sans-serif;
@@ -126,6 +126,7 @@ label {
 }
 
 .layout {
+  font-size: 12px;
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -161,8 +162,10 @@ label {
 .layout-body {
   flex: 1 1 auto;
   min-height: 0;
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: scroll;
   padding: 1.5rem;
+  scrollbar-gutter: stable;
 }
 
 .layout-header__brand {

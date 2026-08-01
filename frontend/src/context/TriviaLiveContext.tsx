@@ -1,5 +1,9 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useQuery, useSubscription } from '@apollo/client/react';
+import {
+  GRAPHQL_WS_STATUS_EVENT,
+  type GraphqlWsStatusDetail,
+} from '../apollo/client';
 import {
   GET_ACTIVE_ROUND,
   GET_SCOREBOARD,
@@ -26,6 +30,8 @@ import type {
 
 const TriviaLiveContext = createContext<TriviaLiveContextValue | null>(null);
 
+const RESTART_DELAY_MS = 1500;
+
 export function TriviaLiveProvider({ children }: { children: ReactNode }) {
   const [round, setRound] = useState<Round | null>(null);
   const [scoreboard, setScoreboard] = useState<ScoreboardEntry[]>([]);
@@ -46,60 +52,146 @@ export function TriviaLiveProvider({ children }: { children: ReactNode }) {
     setScoreboard(scoreData?.scoreboard ?? []);
   }, [scoreData]);
 
+  const restartTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const restartFns = useRef<Array<() => void>>([]);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      clearRestartTimers();
+    };
+  }, []);
+
+  function clearRestartTimers() {
+    for (const timer of restartTimers.current) clearTimeout(timer);
+    restartTimers.current = [];
+  }
+
+  function scheduleSubscriptionRestart(reason: string) {
+    if (!mountedRef.current) return;
+    setSubError(reason);
+    clearRestartTimers();
+    const timer = setTimeout(() => {
+      if (!mountedRef.current) return;
+      for (const restart of restartFns.current) {
+        try {
+          restart();
+        } catch (err) {
+          console.error('[subscriptions] restart failed', err);
+        }
+      }
+      void refetchRound();
+      void refetchScoreboard();
+    }, RESTART_DELAY_MS);
+    restartTimers.current.push(timer);
+  }
+
   const subOptions = {
-    onError: (err: Error) => setSubError(err.message),
+    onError: (err: Error) => {
+      console.warn('[subscriptions] error', err.message);
+      scheduleSubscriptionRestart('Live connection lost. Reconnecting…');
+    },
   };
 
-  const { data: startedData } = useSubscription<QuestionStartedData>(QUESTION_STARTED, subOptions);
-  const { data: votesData } = useSubscription<VoteCountsUpdatedData>(VOTE_COUNTS_UPDATED, subOptions);
-  const { data: countdownData } = useSubscription<CountdownUpdatedData>(COUNTDOWN_UPDATED, subOptions);
-  const { data: endedData } = useSubscription<QuestionEndedData>(QUESTION_ENDED, subOptions);
-  const { data: boardData } = useSubscription<ScoreboardUpdatedData>(SCOREBOARD_UPDATED, subOptions);
-  const { data: roundsResetData } = useSubscription<RoundsResetData>(ROUNDS_RESET, subOptions);
+  const started = useSubscription<QuestionStartedData>(QUESTION_STARTED, subOptions);
+  const votes = useSubscription<VoteCountsUpdatedData>(VOTE_COUNTS_UPDATED, subOptions);
+  const countdown = useSubscription<CountdownUpdatedData>(COUNTDOWN_UPDATED, subOptions);
+  const ended = useSubscription<QuestionEndedData>(QUESTION_ENDED, subOptions);
+  const board = useSubscription<ScoreboardUpdatedData>(SCOREBOARD_UPDATED, subOptions);
+  const roundsReset = useSubscription<RoundsResetData>(ROUNDS_RESET, subOptions);
 
   useEffect(() => {
-    if (startedData?.questionStarted) {
-      setRound(startedData.questionStarted);
+    restartFns.current = [
+      started.restart,
+      votes.restart,
+      countdown.restart,
+      ended.restart,
+      board.restart,
+      roundsReset.restart,
+    ];
+  }, [
+    started.restart,
+    votes.restart,
+    countdown.restart,
+    ended.restart,
+    board.restart,
+    roundsReset.restart,
+  ]);
+
+  useEffect(() => {
+    const onWsStatus = (event: Event) => {
+      const status = (event as CustomEvent<GraphqlWsStatusDetail>).detail?.status;
+      if (status === 'closed') {
+        setSubError('Live connection lost. Reconnecting…');
+        return;
+      }
+      if (status === 'connected') {
+        clearRestartTimers();
+        setSubError(null);
+        for (const restart of restartFns.current) {
+          try {
+            restart();
+          } catch (err) {
+            console.error('[subscriptions] restart after reconnect failed', err);
+          }
+        }
+        void refetchRound();
+        void refetchScoreboard();
+      }
+    };
+
+    window.addEventListener(GRAPHQL_WS_STATUS_EVENT, onWsStatus);
+    return () => {
+      window.removeEventListener(GRAPHQL_WS_STATUS_EVENT, onWsStatus);
+      clearRestartTimers();
+    };
+  }, [refetchRound, refetchScoreboard]);
+
+  useEffect(() => {
+    if (started.data?.questionStarted) {
+      setRound(started.data.questionStarted);
       setSubError(null);
     }
-  }, [startedData]);
+  }, [started.data]);
 
   useEffect(() => {
-    const counts = votesData?.voteCountsUpdated;
+    const counts = votes.data?.voteCountsUpdated;
     if (!counts) return;
     setRound((prev) =>
       prev && prev.status === 'active' ? { ...prev, voteCounts: counts } : prev
     );
     setSubError(null);
-  }, [votesData]);
+  }, [votes.data]);
 
   useEffect(() => {
-    if (countdownData?.countdownUpdated) {
-      setRound(countdownData.countdownUpdated);
+    if (countdown.data?.countdownUpdated) {
+      setRound(countdown.data.countdownUpdated);
       setSubError(null);
     }
-  }, [countdownData]);
+  }, [countdown.data]);
 
   useEffect(() => {
-    if (endedData?.questionEnded) {
-      setRound(endedData.questionEnded);
+    if (ended.data?.questionEnded) {
+      setRound(ended.data.questionEnded);
       setSubError(null);
     }
-  }, [endedData]);
+  }, [ended.data]);
 
   useEffect(() => {
-    if (boardData?.scoreboardUpdated) {
-      setScoreboard(boardData.scoreboardUpdated);
+    if (board.data?.scoreboardUpdated) {
+      setScoreboard(board.data.scoreboardUpdated);
       setSubError(null);
     }
-  }, [boardData]);
+  }, [board.data]);
 
   useEffect(() => {
-    if (roundsResetData?.roundsReset) {
+    if (roundsReset.data?.roundsReset) {
       setRound(null);
       setSubError(null);
     }
-  }, [roundsResetData]);
+  }, [roundsReset.data]);
 
   const value = useMemo(
     (): TriviaLiveContextValue => ({

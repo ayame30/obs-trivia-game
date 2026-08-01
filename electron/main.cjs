@@ -191,21 +191,7 @@ function registerWindowIpc() {
   ipcMain.on('window:close', async (event) => {
     const win = BrowserWindow.fromWebContents(event.sender);
     if (!win) return;
-
-    const { response } = await dialog.showMessageBox(win, {
-      type: 'warning',
-      buttons: ['Cancel', 'Close app'],
-      defaultId: 0,
-      cancelId: 0,
-      title: 'Close Obs Trivia game?',
-      message: 'Close Obs Trivia game?',
-      detail:
-        'All trivia overlays will stop working until you turn the server on again by opening this app.',
-    });
-
-    if (response === 1) {
-      win.close();
-    }
+    win.close();
   });
 }
 
