@@ -24,11 +24,11 @@ export default function ScoreboardPanel({ entries }: ScoreboardPanelProps) {
               damping: 30,
             }}
           >
-            <span className="name" style={{ fontWeight: 900 }}>
+            <span className="scoreboard-name name" style={{ fontWeight: 900 }}>
               {entry.displayName}
             </span>
-            <strong className="score" style={{ fontWeight: 900 }}>
-              {entry.score}
+            <strong className="scoreboard-score score" style={{ fontWeight: 900 }}>
+              {entry.score * 10}
             </strong>
           </motion.li>
         ))}
