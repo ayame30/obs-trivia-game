@@ -5,10 +5,10 @@ import { formatQuestionForChat, parseAnswer } from '../common/mappers';
 import { Round } from '../entities/round.entity';
 import { RoundEventsService } from '../rounds/round-events.service';
 import { RoundsService } from '../rounds/rounds.service';
+import { SettingsService } from '../settings/settings.service';
 import { TwitchConfigService } from './twitch-config.service';
 
 const TWITCH_IRC = process.env.TWITCH_CHAT_WSS || 'wss://irc-ws.chat.twitch.tv';
-const DEADLINE_MESSAGE = '===== END =====';
 
 interface ChatLogEntry {
   displayName: string;
@@ -38,7 +38,8 @@ export class TwitchChatMonitorService implements OnModuleInit {
     private readonly twitchConfigService: TwitchConfigService,
     @Inject(forwardRef(() => RoundsService))
     private readonly roundsService: RoundsService,
-    private readonly roundEventsService: RoundEventsService
+    private readonly roundEventsService: RoundEventsService,
+    private readonly settingsService: SettingsService
   ) {}
 
   async onModuleInit() {
@@ -122,7 +123,7 @@ export class TwitchChatMonitorService implements OnModuleInit {
   onQuestionStarted(round: Round): void {
     this.deadlineSentForRoundId = null;
     this.resetChatLog(round.id);
-    this.sendChatMessage(formatQuestionForChat(round));
+    void this.sendQuestionMessage(round);
     this.scheduleCountdownEnd(round);
   }
 
@@ -132,8 +133,14 @@ export class TwitchChatMonitorService implements OnModuleInit {
 
   onQuestionEnded(round: Round | null | undefined): void {
     this.clearCountdownTimer();
-    this.sendDeadlineIfNeeded(round?.id ?? this.chatLogRoundId);
+    void this.sendDeadlineIfNeeded(round);
     this.clearChatLog();
+  }
+
+  private async sendQuestionMessage(round: Round): Promise<void> {
+    const settings = await this.settingsService.getSettings();
+    if (!settings.showQuestionChat) return;
+    this.sendChatMessage(formatQuestionForChat(round, settings.questionChatTemplate));
   }
 
   private scheduleReconnect(): void {
@@ -215,11 +222,13 @@ export class TwitchChatMonitorService implements OnModuleInit {
     }
   }
 
-  private sendDeadlineIfNeeded(roundId: number | null | undefined): void {
-    if (!roundId || this.deadlineSentForRoundId === roundId) return;
-    this.deadlineSentForRoundId = roundId;
-    this.logChatLogBeforeDeadline(roundId);
-    this.sendChatMessage(DEADLINE_MESSAGE);
+  private async sendDeadlineIfNeeded(round: Round | null | undefined): Promise<void> {
+    if (!round || this.deadlineSentForRoundId === round.id) return;
+    this.deadlineSentForRoundId = round.id;
+    this.logChatLogBeforeDeadline(round.id);
+    const settings = await this.settingsService.getSettings();
+    if (!settings.showCutoffChat) return;
+    this.sendChatMessage(formatQuestionForChat(round, settings.cutoffChatMessage));
   }
 
   private scheduleCountdownEnd(round: Round | null | undefined): void {
@@ -234,7 +243,7 @@ export class TwitchChatMonitorService implements OnModuleInit {
       void this.roundsService.findOne(roundId).then((active) => {
         if (!active || active.id !== roundId || active.status !== 'active') return;
         if (active.countdownPaused) return;
-        this.sendDeadlineIfNeeded(roundId);
+        void this.sendDeadlineIfNeeded(round);
       });
     }, delayMs);
   }

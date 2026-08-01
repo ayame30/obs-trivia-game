@@ -99,15 +99,23 @@ export function emptyVoteCounts(): VoteCounts {
   return { A: 0, B: 0, C: 0, D: 0, total: 0 };
 }
 
-export function formatQuestionForChat(round: Round): string {
+export function formatQuestionForChat(round: Round, template: string): string {
   const q = round.question;
-  return [
-    `Q${round.id}: ${q.text}`,
-    `A ) ${q.optionA}`,
-    `B ) ${q.optionB}`,
-    `C ) ${q.optionC}`,
-    `D ) ${q.optionD}`,
-  ].join('\n');
+  const replacements: Record<string, string> = {
+    round: String(round.id),
+    question: q.text,
+    answerA: q.optionA,
+    answerB: q.optionB,
+    answerC: q.optionC,
+    answerD: q.optionD,
+    countDownSecond: String(round.countdownSeconds ?? DEFAULT_COUNTDOWN_SECONDS),
+  };
+
+  return template.replace(/\{\{(\w+)\}\}/g, (match, key: string) => {
+    return Object.prototype.hasOwnProperty.call(replacements, key)
+      ? replacements[key]
+      : match;
+  });
 }
 
 export function parseAnswer(message: string): AnswerChoice | null {

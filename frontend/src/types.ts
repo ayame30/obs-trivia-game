@@ -58,6 +58,31 @@ export interface TwitchStoredAuth {
   userId: string;
 }
 
+export interface AppSettings {
+  showQuestionChat: boolean;
+  questionChatTemplate: string;
+  showCutoffChat: boolean;
+  cutoffChatMessage: string;
+  scoreMultiplier: number;
+  updatedAt: string;
+}
+
+export interface AppSettingsFormState {
+  showQuestionChat: boolean;
+  questionChatTemplate: string;
+  showCutoffChat: boolean;
+  cutoffChatMessage: string;
+  scoreMultiplier: number | string;
+}
+
+export interface GetAppSettingsData {
+  appSettings: AppSettings;
+}
+
+export interface UpdateAppSettingsMutation {
+  updateAppSettings: AppSettings;
+}
+
 export interface QuestionFormState {
   text: string;
   optionA: string;

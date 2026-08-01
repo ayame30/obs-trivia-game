@@ -190,3 +190,42 @@ export class ScoreboardUpdateInput {
   @Field(() => Int, { nullable: true })
   delta?: number;
 }
+
+@ObjectType('AppSettings')
+export class AppSettingsModel {
+  @Field()
+  showQuestionChat!: boolean;
+
+  @Field()
+  questionChatTemplate!: string;
+
+  @Field()
+  showCutoffChat!: boolean;
+
+  @Field()
+  cutoffChatMessage!: string;
+
+  @Field(() => Int)
+  scoreMultiplier!: number;
+
+  @Field()
+  updatedAt!: string;
+}
+
+@InputType()
+export class UpdateAppSettingsInput {
+  @Field({ nullable: true })
+  showQuestionChat?: boolean;
+
+  @Field({ nullable: true })
+  questionChatTemplate?: string;
+
+  @Field({ nullable: true })
+  showCutoffChat?: boolean;
+
+  @Field({ nullable: true })
+  cutoffChatMessage?: string;
+
+  @Field(() => Int, { nullable: true })
+  scoreMultiplier?: number;
+}

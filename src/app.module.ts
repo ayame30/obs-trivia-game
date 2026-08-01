@@ -7,6 +7,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { mkdirSync } from 'fs';
 import { dirname, join, resolve } from 'path';
 import {
+  AppSettings,
   Question,
   Round,
   ScoreboardEntry,
@@ -16,6 +17,7 @@ import {
 import { GraphqlModule } from './graphql/graphql.module';
 import { HealthController } from './health/health.controller';
 import { PubSubModule } from './pubsub/pubsub.module';
+import { SettingsModule } from './settings/settings.module';
 import { TwitchModule } from './twitch/twitch.module';
 
 @Module({
@@ -32,7 +34,7 @@ import { TwitchModule } from './twitch/twitch.module';
           type: 'sqljs',
           location: database,
           autoSave: true,
-          entities: [Question, Round, Vote, ScoreboardEntry, TwitchConfig],
+          entities: [Question, Round, Vote, ScoreboardEntry, TwitchConfig, AppSettings],
           synchronize: false,
         };
       },
@@ -50,6 +52,7 @@ import { TwitchModule } from './twitch/twitch.module';
       exclude: ['/graphql*path', '/health*path'],
     }),
     PubSubModule,
+    SettingsModule,
     GraphqlModule,
     TwitchModule,
   ],

@@ -14,6 +14,7 @@ export default function Layout() {
           <NavLink to="/" end>
             Dashboard
           </NavLink>
+          <NavLink to="/settings">Settings</NavLink>
         </nav>
       </header>
       <Outlet />

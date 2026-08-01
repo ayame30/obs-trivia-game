@@ -20,6 +20,8 @@ import {
   ScoreboardEntryModel,
   ScoreboardUpdateInput,
   TwitchConfigModel,
+  UpdateAppSettingsInput,
+  AppSettingsModel,
   UpdateQuestionInput,
   VoteCountsModel,
 } from './models';
@@ -27,6 +29,7 @@ import { QuestionsService } from '../questions/questions.service';
 import { RoundsService } from '../rounds/rounds.service';
 import { RoundEventsService } from '../rounds/round-events.service';
 import { ScoreboardService } from '../scoreboard/scoreboard.service';
+import { SettingsService } from '../settings/settings.service';
 import { TwitchConfigService } from '../twitch/twitch-config.service';
 import { TwitchOAuthService } from '../twitch/twitch-oauth.service';
 import { TwitchChatMonitorService } from '../twitch/twitch-chat-monitor.service';
@@ -38,6 +41,7 @@ export class TriviaResolver {
     private readonly roundsService: RoundsService,
     private readonly roundEventsService: RoundEventsService,
     private readonly scoreboardService: ScoreboardService,
+    private readonly settingsService: SettingsService,
     private readonly twitchConfigService: TwitchConfigService,
     private readonly twitchOAuthService: TwitchOAuthService,
     private readonly chatMonitor: TwitchChatMonitorService,
@@ -73,6 +77,16 @@ export class TriviaResolver {
   @Query(() => [ScoreboardEntryModel])
   scoreboard() {
     return this.scoreboardService.findAll();
+  }
+
+  @Query(() => AppSettingsModel)
+  appSettings() {
+    return this.settingsService.getSettings();
+  }
+
+  @Mutation(() => AppSettingsModel)
+  updateAppSettings(@Args('input') input: UpdateAppSettingsInput) {
+    return this.settingsService.updateSettings(input);
   }
 
   @Mutation(() => QuestionModel)

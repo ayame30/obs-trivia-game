@@ -203,6 +203,32 @@ export const SEND_TWITCH_CHAT_MESSAGE = gql`
   }
 `;
 
+export const GET_APP_SETTINGS = gql`
+  query GetAppSettings {
+    appSettings {
+      showQuestionChat
+      questionChatTemplate
+      showCutoffChat
+      cutoffChatMessage
+      scoreMultiplier
+      updatedAt
+    }
+  }
+`;
+
+export const UPDATE_APP_SETTINGS = gql`
+  mutation UpdateAppSettings($input: UpdateAppSettingsInput!) {
+    updateAppSettings(input: $input) {
+      showQuestionChat
+      questionChatTemplate
+      showCutoffChat
+      cutoffChatMessage
+      scoreMultiplier
+      updatedAt
+    }
+  }
+`;
+
 export const QUESTION_STARTED = gql`
   subscription OnQuestionStarted {
     questionStarted {

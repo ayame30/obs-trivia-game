@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAppSettings } from '../hooks/useAppSettings';
 import type { ScoreboardEntry } from '../types';
 
 interface ScoreboardPanelProps {
@@ -9,6 +10,8 @@ interface ScoreboardPanelProps {
 const SCOREBOARD_SLOTS = 10;
 
 export default function ScoreboardPanel({ entries }: ScoreboardPanelProps) {
+  const { scoreMultiplier } = useAppSettings();
+
   const sorted = useMemo(() => {
     const ranked = [...entries].sort((a, b) => b.score - a.score);
     if (ranked.length >= SCOREBOARD_SLOTS) return ranked;
@@ -23,6 +26,7 @@ export default function ScoreboardPanel({ entries }: ScoreboardPanelProps) {
     );
     return [...ranked, ...placeholders];
   }, [entries]);
+
   return (
     <motion.ol layout className="scoreboard-list" style={{ listStyle: 'none', padding: 0 }}>
       <AnimatePresence>
@@ -43,7 +47,7 @@ export default function ScoreboardPanel({ entries }: ScoreboardPanelProps) {
               {entry.displayName}
             </span>
             <strong className="scoreboard-score score" style={{ fontWeight: 900 }}>
-              {entry.score}
+              {entry.score * scoreMultiplier}
             </strong>
           </motion.li>
         ))}

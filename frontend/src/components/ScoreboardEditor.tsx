@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation } from '@apollo/client/react';
 import { UPDATE_SCOREBOARD } from '../graphql/operations';
+import { useAppSettings } from '../hooks/useAppSettings';
 import type { ScoreboardEntry, UpdateScoreboardMutation } from '../types';
 
 function clampScore(value: string | number): number {
@@ -23,6 +24,7 @@ interface ScoreboardEditorProps {
 }
 
 export default function ScoreboardEditor({ entries, onSaved }: ScoreboardEditorProps) {
+  const { scoreMultiplier } = useAppSettings();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<Record<string, number>>({});
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -171,7 +173,7 @@ export default function ScoreboardEditor({ entries, onSaved }: ScoreboardEditorP
                 </button>
               </div>
             ) : (
-              <strong>{entry.score}</strong>
+              <strong>{entry.score * scoreMultiplier}</strong>
             )}
           </li>
         ))}
