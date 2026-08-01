@@ -14,6 +14,7 @@ Twitch chat trivia with live OBS overlays (ABCD votes, scoreboard, countdown).
    - [Frontend hot reload](#frontend-hot-reload-optional)
    - [Overlay CSS + MCP](#overlay-css-file-split--mcp)
    - [Electron desktop app](#electron-desktop-app)
+   - [GitHub Releases](#github-releases)
 4. [Twitch chat votes](#twitch-chat-votes)
 5. [GraphQL (developers)](#graphql-developers)
    - [Questions](#questions)
@@ -36,6 +37,12 @@ Twitch chat trivia with live OBS overlays (ABCD votes, scoreboard, countdown).
 To stop: close the app window.
 
 If Windows SmartScreen appears, choose **More info** → **Run anyway**.
+
+---
+
+## Screenshots
+
+![Obs Trivia game dashboard](docs/images/screencap.png)
 
 ---
 
@@ -118,7 +125,21 @@ npm run electron:dev
 npm run dist:win
 ```
 
-`dist:win` packs Nest + production `node_modules` into `electron-resources/server`, then runs electron-builder (NSIS only).
+`dist:win` packs Nest + production `node_modules` into `electron-resources/server` (pruned), keeps only the `en-US` Electron locale, then builds an NSIS installer. Expect roughly **~90–110 MB** for the `.exe` — most of that is Chromium inside Electron; the Nest server payload is trimmed separately.
+
+### GitHub Releases
+
+Push a version tag to build the Windows installer and publish a GitHub Release (needs repo secret `TWITCH_CLIENT_ID`):
+
+```bash
+# bump version in package.json / frontend/package.json first, then:
+git tag v1.0.1
+git push origin v1.0.1
+```
+
+Or run **Actions → Release → Run workflow** and enter a version (e.g. `1.0.1`).
+
+Artifacts: `ObsTriviaGame-<version>-x64.exe` (+ `.blockmap`), and `LICENSE`.
 
 ---
 

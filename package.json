@@ -62,6 +62,10 @@
       "output": "release",
       "buildResources": "electron/build"
     },
+    "compression": "maximum",
+    "electronLanguages": [
+      "en-US"
+    ],
     "files": [
       "electron/**/*",
       "package.json"

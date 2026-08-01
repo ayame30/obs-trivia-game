@@ -215,7 +215,7 @@ export default function Settings() {
             ). Changes apply within a few seconds (or refresh the browser source).
           </p>
           <p className="setup-step__hint">
-            Optional: edit via your own chatbot — with the app running, add this Cursor MCP server:
+            Optional: edit via your own chatbot — with the app running, add this MCP server:
           </p>
           <pre className="settings-mcp-config">{mcpConfig}</pre>
           <p className="setup-step__hint">

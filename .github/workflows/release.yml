@@ -1,0 +1,101 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version without v prefix (e.g. 1.0.1). Defaults to package.json version.'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  windows:
+    name: Build & publish Windows
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Resolve version
+        id: version
+        shell: bash
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          elif [[ -n "${{ inputs.version }}" ]]; then
+            VERSION="${{ inputs.version }}"
+            VERSION="${VERSION#v}"
+          else
+            VERSION="$(node -p "require('./package.json').version")"
+          fi
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-].+)?$ ]]; then
+            echo "Invalid version: $VERSION"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+          npm version "$VERSION" --no-git-tag-version --allow-same-version
+          npm version "$VERSION" --no-git-tag-version --allow-same-version --prefix frontend
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          npm ci --prefix frontend
+
+      - name: Write env files for packaging
+        env:
+          TWITCH_CLIENT_ID: ${{ secrets.TWITCH_CLIENT_ID }}
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:TWITCH_CLIENT_ID)) {
+            throw "Repository secret TWITCH_CLIENT_ID is required for release builds."
+          }
+          if ($env:TWITCH_CLIENT_ID -eq 'your_twitch_client_id') {
+            throw "TWITCH_CLIENT_ID secret is still a placeholder."
+          }
+          Set-Content -Path .env -Encoding utf8NoBOM -Value @(
+            'PORT=4000'
+            "TWITCH_CLIENT_ID=$($env:TWITCH_CLIENT_ID)"
+            'DATABASE_PATH=./data/obs-trivia-game.db'
+          )
+          Set-Content -Path frontend/.env -Encoding utf8NoBOM -Value @(
+            'VITE_GRAPHQL_HTTP=/graphql'
+            "VITE_TWITCH_CLIENT_ID=$($env:TWITCH_CLIENT_ID)"
+          )
+
+      - name: Build Windows installer
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: npm run dist:win
+
+      - name: Upload release artifacts
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: Obs Trivia game ${{ steps.version.outputs.tag }}
+          draft: false
+          prerelease: ${{ contains(steps.version.outputs.version, '-') }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            release/ObsTriviaGame-*-x64.exe
+            release/ObsTriviaGame-*-x64.exe.blockmap
+            LICENSE
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
