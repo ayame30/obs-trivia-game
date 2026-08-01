@@ -43,7 +43,7 @@ export default function ScoreboardPanel({ entries }: ScoreboardPanelProps) {
               {entry.displayName}
             </span>
             <strong className="scoreboard-score score" style={{ fontWeight: 900 }}>
-              {entry.score * 10}
+              {entry.score}
             </strong>
           </motion.li>
         ))}
