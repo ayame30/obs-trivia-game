@@ -1,23 +1,93 @@
+import { useState } from 'react';
 import { NavLink, Outlet } from 'react-router';
 
+function isElectronApp(): boolean {
+  return typeof window !== 'undefined' && Boolean(window.obsTriviaDesktop?.isElectron);
+}
+
 export default function Layout() {
+  const electron = isElectronApp();
+  const [confirmClose, setConfirmClose] = useState(false);
+
+  function handleCloseClick() {
+    setConfirmClose(true);
+  }
+
+  function handleConfirmClose() {
+    window.obsTriviaDesktop?.close();
+  }
+
   return (
-    <div className="layout">
-      <header>
-        <div>
+    <div className={`layout${electron ? ' layout--electron' : ''}`}>
+      <header className={electron ? 'layout-header layout-header--electron' : 'layout-header'}>
+        <div className="layout-header__brand">
           <h1 style={{ margin: 0, fontSize: '1.35rem' }}>Obs Trivia game</h1>
           <p style={{ margin: '0.25rem 0 0', color: 'var(--muted)', fontSize: '0.85rem' }}>
             Setup · Twitch chat · OBS overlays
           </p>
         </div>
-        <nav>
+        <nav className="layout-header__nav">
           <NavLink to="/" end>
             Dashboard
           </NavLink>
           <NavLink to="/settings">Settings</NavLink>
         </nav>
+        {electron ? (
+          <div className="window-controls" role="toolbar" aria-label="Window controls">
+            <button
+              type="button"
+              className="window-controls__btn"
+              aria-label="Minimize"
+              title="Minimize"
+              onClick={() => window.obsTriviaDesktop?.minimize()}
+            >
+              <span aria-hidden="true">─</span>
+            </button>
+            <button
+              type="button"
+              className="window-controls__btn"
+              aria-label="Maximize"
+              title="Maximize"
+              onClick={() => window.obsTriviaDesktop?.maximize()}
+            >
+              <span aria-hidden="true">☐</span>
+            </button>
+            <button
+              type="button"
+              className="window-controls__btn window-controls__btn--close"
+              aria-label="Close"
+              title="Close"
+              onClick={handleCloseClick}
+            >
+              <span aria-hidden="true">✕</span>
+            </button>
+          </div>
+        ) : null}
       </header>
-      <Outlet />
+
+      <main className="layout-body">
+        <Outlet />
+      </main>
+
+      {confirmClose ? (
+        <div className="close-confirm" role="dialog" aria-modal="true" aria-labelledby="close-confirm-title">
+          <div className="close-confirm__panel">
+            <h2 id="close-confirm-title">Close Obs Trivia game?</h2>
+            <p>
+              All OBS overlays will stop working until you turn the server on again by opening this
+              app.
+            </p>
+            <div className="close-confirm__actions">
+              <button type="button" className="close-confirm__cancel" onClick={() => setConfirmClose(false)}>
+                Cancel
+              </button>
+              <button type="button" className="close-confirm__confirm" onClick={handleConfirmClose}>
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -357,6 +357,10 @@ export default function DashboardSetup({
           Add each URL as a <strong>Browser Source</strong> in OBS or Streamlabs. Set width ~1920,
           height ~1080, and enable transparent background if your scene needs it.
         </p>
+        <p className="setup-step__hint">
+          If an overlay looks blank or stuck, right-click the Browser Source in OBS →{' '}
+          <strong>Refresh</strong> (or toggle visibility) after this app is running.
+        </p>
 
         <div className="setup-step__url-block">
           <label>Live trivia overlay</label>

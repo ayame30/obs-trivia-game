@@ -9,3 +9,14 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+interface ObsTriviaDesktop {
+  readonly isElectron: true;
+  minimize: () => void;
+  maximize: () => void;
+  close: () => void;
+}
+
+interface Window {
+  obsTriviaDesktop?: ObsTriviaDesktop;
+}

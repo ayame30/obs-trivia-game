@@ -112,6 +112,14 @@ export default function Settings() {
             <code>{'{{answerC}}'}</code> <code>{'{{answerD}}'}</code>{' '}
             <code>{'{{countDownSecond}}'}</code>
           </p>
+          <p className="setup-step__hint">
+            Default:{' '}
+            <code>
+              {
+                'Q{{round}}:  {{question}} A ) {{answerA}} B ) {{answerB}} C ) {{answerC}} D ) {{answerD}}'
+              }
+            </code>
+          </p>
         </section>
 
         <section className="settings-section">

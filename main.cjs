@@ -1,11 +1,10 @@
-const { app, BrowserWindow, dialog, shell, ipcMain } = require('electron');
+const { app, BrowserWindow, dialog, shell } = require('electron');
 const { spawn } = require('child_process');
 const fs = require('fs');
 const http = require('http');
 const path = require('path');
 
-/** Must match Nest listen port when Electron sets PORT. */
-const DEFAULT_PORT = 5000;
+const DEFAULT_PORT = 4000;
 
 /** @type {import('child_process').ChildProcess | null} */
 let serverProcess = null;
@@ -176,39 +175,6 @@ function stopNestServer() {
   }
 }
 
-function registerWindowIpc() {
-  ipcMain.on('window:minimize', (event) => {
-    BrowserWindow.fromWebContents(event.sender)?.minimize();
-  });
-
-  ipcMain.on('window:maximize', (event) => {
-    const win = BrowserWindow.fromWebContents(event.sender);
-    if (!win) return;
-    if (win.isMaximized()) win.unmaximize();
-    else win.maximize();
-  });
-
-  ipcMain.on('window:close', async (event) => {
-    const win = BrowserWindow.fromWebContents(event.sender);
-    if (!win) return;
-
-    const { response } = await dialog.showMessageBox(win, {
-      type: 'warning',
-      buttons: ['Cancel', 'Close app'],
-      defaultId: 0,
-      cancelId: 0,
-      title: 'Close Obs Trivia game?',
-      message: 'Close Obs Trivia game?',
-      detail:
-        'All trivia overlays will stop working until you turn the server on again by opening this app.',
-    });
-
-    if (response === 1) {
-      win.close();
-    }
-  });
-}
-
 async function createWindow(port) {
   mainWindow = new BrowserWindow({
     width: 1280,
@@ -216,9 +182,7 @@ async function createWindow(port) {
     minWidth: 960,
     minHeight: 640,
     title: 'Obs Trivia game',
-    frame: false,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.cjs'),
       nodeIntegration: false,
       contextIsolation: true,
     },
@@ -229,7 +193,7 @@ async function createWindow(port) {
     return { action: 'deny' };
   });
 
-  await mainWindow.loadURL(`http://127.0.0.1:${port}/`);
+  await mainWindow.loadURL(`http://localhost:${port}/`);
 
   mainWindow.on('closed', () => {
     mainWindow = null;
@@ -264,10 +228,7 @@ if (!gotLock) {
     }
   });
 
-  app.whenReady().then(() => {
-    registerWindowIpc();
-    return bootstrap();
-  });
+  app.whenReady().then(bootstrap);
 
   app.on('before-quit', () => {
     isQuitting = true;
