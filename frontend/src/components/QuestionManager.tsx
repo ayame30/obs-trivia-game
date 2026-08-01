@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useState, type FormEvent, type KeyboardEvent } from 'react';
 import { useQuery, useMutation } from '@apollo/client/react';
 import {
   GET_QUESTIONS,
@@ -21,6 +21,28 @@ const emptyForm: QuestionFormState = {
   correctAnswer: 'A',
   countdownSeconds: 30,
 };
+
+const MAX_TEXT_ROWS = 2;
+
+function lineCount(value: string): number {
+  if (!value) return 1;
+  return value.split('\n').length;
+}
+
+function limitLines(value: string, maxLines = MAX_TEXT_ROWS): string {
+  const lines = value.split('\n');
+  if (lines.length <= maxLines) return value;
+  return lines.slice(0, maxLines).join('\n');
+}
+
+function blockExtraRows(
+  e: KeyboardEvent<HTMLTextAreaElement>,
+  value: string
+): void {
+  if (e.key === 'Enter' && lineCount(value) >= MAX_TEXT_ROWS) {
+    e.preventDefault();
+  }
+}
 
 interface QuestionManagerProps {
   activeRound: Round | null | undefined;
@@ -66,11 +88,11 @@ export default function QuestionManager({ activeRound, onRoundChange }: Question
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     const input = {
-      text: form.text.trim(),
-      optionA: form.optionA.trim(),
-      optionB: form.optionB.trim(),
-      optionC: form.optionC.trim(),
-      optionD: form.optionD.trim(),
+      text: limitLines(form.text).trim(),
+      optionA: limitLines(form.optionA).trim(),
+      optionB: limitLines(form.optionB).trim(),
+      optionC: limitLines(form.optionC).trim(),
+      optionD: limitLines(form.optionD).trim(),
       correctAnswer: form.correctAnswer,
       countdownSeconds: Number(form.countdownSeconds) || 30,
     };
@@ -84,11 +106,11 @@ export default function QuestionManager({ activeRound, onRoundChange }: Question
   const startEdit = (q: Question) => {
     setEditingId(q.id);
     setForm({
-      text: q.text,
-      optionA: q.optionA,
-      optionB: q.optionB,
-      optionC: q.optionC,
-      optionD: q.optionD,
+      text: limitLines(q.text),
+      optionA: limitLines(q.optionA),
+      optionB: limitLines(q.optionB),
+      optionC: limitLines(q.optionC),
+      optionD: limitLines(q.optionD),
       correctAnswer: q.correctAnswer || 'A',
       countdownSeconds: q.countdownSeconds ?? 30,
     });
@@ -104,9 +126,11 @@ export default function QuestionManager({ activeRound, onRoundChange }: Question
         <div>
           <label>Question</label>
           <textarea
-            rows={2}
+            rows={MAX_TEXT_ROWS}
+            className="question-field--2-rows"
             value={form.text}
-            onChange={(e) => setForm({ ...form, text: e.target.value })}
+            onChange={(e) => setForm({ ...form, text: limitLines(e.target.value) })}
+            onKeyDown={(e) => blockExtraRows(e, form.text)}
             required
           />
         </div>
@@ -115,9 +139,13 @@ export default function QuestionManager({ activeRound, onRoundChange }: Question
             <div key={key}>
               <label>Option {String.fromCharCode(65 + i)}</label>
               <textarea
-                rows={2}
+                rows={MAX_TEXT_ROWS}
+                className="question-field--2-rows"
                 value={form[key]}
-                onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, [key]: limitLines(e.target.value) })
+                }
+                onKeyDown={(e) => blockExtraRows(e, form[key])}
                 required
               />
             </div>
