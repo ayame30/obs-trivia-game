@@ -20,7 +20,7 @@ const emptyForm: AppSettingsFormState = {
 /** MCP runs on the Nest API, not the Vite UI port. */
 function getMcpServerUrl(): string {
   if (typeof window === 'undefined') {
-    return 'http://127.0.0.1:4000/mcp';
+    return 'http://localhost:4000/mcp';
   }
   const pagePort = window.location.port;
   const apiPort =

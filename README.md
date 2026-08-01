@@ -84,7 +84,7 @@ npm run build:start
 | Trivia overlay | [http://localhost:4000/overlay/questions](http://localhost:4000/overlay/questions) |
 | Scoreboard overlay | [http://localhost:4000/overlay/scoreboard](http://localhost:4000/overlay/scoreboard) |
 | Twitch OAuth redirect | [http://localhost:4000/](http://localhost:4000/) (register this URI on your Twitch app) |
-| Overlay CSS + Question CRUD MCP | [http://127.0.0.1:4000/mcp](http://127.0.0.1:4000/mcp) (`POST`) |
+| Overlay CSS + Question CRUD MCP | [http://localhost:4000/mcp](http://localhost:4000/mcp) (`POST`) |
 
 ### Frontend hot reload (optional)
 
@@ -108,7 +108,7 @@ OAuth still redirects to port **4000** when using Vite (see `VITE_TWITCH_REDIREC
 | [`frontend/src/styles/base.css`](frontend/src/styles/base.css) | Shared tokens / forms |
 | [`frontend/src/styles/global.css`](frontend/src/styles/global.css) | Imports the three above |
 
-Custom CSS is editable in **Settings → Overlay custom CSS**, or via MCP on the running API (`POST` [http://127.0.0.1:4000/mcp](http://127.0.0.1:4000/mcp)).
+Custom CSS is editable in **Settings → Overlay custom CSS**, or via MCP on the running API (`POST` [http://localhost:4000/mcp](http://localhost:4000/mcp)).
 
 See:
 
