@@ -1,0 +1,58 @@
+import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { GraphQLModule } from '@nestjs/graphql';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { mkdirSync } from 'fs';
+import { dirname, join, resolve } from 'path';
+import {
+  Question,
+  Round,
+  ScoreboardEntry,
+  TwitchConfig,
+  Vote,
+} from './entities';
+import { GraphqlModule } from './graphql/graphql.module';
+import { HealthController } from './health/health.controller';
+import { PubSubModule } from './pubsub/pubsub.module';
+import { TwitchModule } from './twitch/twitch.module';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => {
+        const database = resolve(
+          config.get<string>('DATABASE_PATH', './data/stream-trivia.db')
+        );
+        mkdirSync(dirname(database), { recursive: true });
+        return {
+          type: 'sqljs',
+          location: database,
+          autoSave: true,
+          entities: [Question, Round, Vote, ScoreboardEntry, TwitchConfig],
+          synchronize: false,
+        };
+      },
+    }),
+    GraphQLModule.forRoot<ApolloDriverConfig>({
+      driver: ApolloDriver,
+      autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
+      sortSchema: true,
+      subscriptions: {
+        'graphql-ws': true,
+      },
+    }),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'frontend', 'dist'),
+      exclude: ['/graphql*path', '/health*path'],
+    }),
+    PubSubModule,
+    GraphqlModule,
+    TwitchModule,
+  ],
+  controllers: [HealthController],
+})
+export class AppModule {}

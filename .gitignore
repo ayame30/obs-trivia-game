@@ -5,3 +5,4 @@ frontend/dist/
 data/
 .env
 frontend/.env
+src/schema.gql
