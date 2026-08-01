@@ -5,7 +5,7 @@ const http = require('http');
 const path = require('path');
 
 /** Must match Nest listen port when Electron sets PORT. */
-const DEFAULT_PORT = 5000;
+const DEFAULT_PORT = 4000;
 
 /** @type {import('child_process').ChildProcess | null} */
 let serverProcess = null;

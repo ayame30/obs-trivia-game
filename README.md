@@ -8,8 +8,8 @@ Twitch chat trivia with live OBS overlays (ABCD votes, scoreboard, countdown).
 2. Install / double-click to open **Obs Trivia game**.
 3. Sign in with Twitch in the app and finish the setup steps.
 4. In OBS or Streamlabs, add **Browser Sources**:
-   - Trivia overlay: `http://localhost:5000/overlay`
-   - Scoreboard: `http://localhost:5000/scoreboard-overlay`
+   - Trivia overlay: `http://localhost:4000/overlay`
+   - Scoreboard: `http://localhost:4000/scoreboard-overlay`
 5. Keep the app **running** while you stream.
 
 To stop: close the app window.
@@ -50,10 +50,10 @@ npm run dev
 npm run build:start
 ```
 
-App: `http://localhost:5000/`  
-OBS overlay: `http://localhost:5000/overlay`  
-Scoreboard overlay: `http://localhost:5000/scoreboard-overlay`  
-Twitch OAuth redirect: `http://localhost:5000/` (register this URI on your Twitch app)
+App: `http://localhost:4000/`  
+OBS overlay: `http://localhost:4000/overlay`  
+Scoreboard overlay: `http://localhost:4000/scoreboard-overlay`  
+Twitch OAuth redirect: `http://localhost:4000/` (register this URI on your Twitch app)
 
 ### Frontend hot reload (optional)
 
@@ -66,7 +66,20 @@ cd frontend && npm run dev
 ```
 
 Vite proxies `/graphql` to the API. UI: `http://localhost:3001`  
-OAuth still redirects to port **5000** when using Vite (see `VITE_TWITCH_REDIRECT_ORIGIN`).
+OAuth still redirects to port **4000** when using Vite (see `VITE_TWITCH_REDIRECT_ORIGIN`).
+
+### Overlay CSS (file split + MCP)
+
+- App chrome: `frontend/src/styles/dashboard.css`
+- OBS overlays: `frontend/src/styles/overlay.css`
+- Shared tokens/forms: `frontend/src/styles/base.css`  
+  (`global.css` only imports these three.)
+
+Custom CSS is editable in **Settings → Overlay custom CSS**, or via MCP on the running API:
+
+`POST http://127.0.0.1:4000/mcp`
+
+See [`mcp/overlay-css/README.md`](mcp/overlay-css/README.md) and the frontend guide [`frontend/docs/overlay-css-mcp.md`](frontend/docs/overlay-css-mcp.md) for Cursor MCP config and tools.
 
 ### Electron desktop app
 

@@ -1,0 +1,26 @@
+---
+description: Obs Trivia Nest MCP — overlay CSS and question bank CRUD
+globs: frontend/src/styles/overlay.css,frontend/src/pages/Settings.tsx,frontend/src/pages/Overlay.tsx,frontend/src/pages/ScoreboardOverlay.tsx,frontend/src/components/OverlayCustomStyles.tsx,frontend/src/components/QuestionManager.tsx,frontend/docs/overlay-css-mcp.md
+alwaysApply: false
+---
+
+# Obs Trivia MCP
+
+When editing OBS overlay styles, Settings overlay CSS, or the question bank via a chatbot:
+
+- MCP URL: **`http://127.0.0.1:4000/mcp`** (API must be running).
+- Guideline: `frontend/docs/overlay-css-mcp.md`.
+
+```json
+{
+  "mcpServers": {
+    "obs-trivia-game": {
+      "url": "http://127.0.0.1:4000/mcp"
+    }
+  }
+}
+```
+
+**Overlay CSS:** `get_overlay_style_guide`, `get_overlay_css`, `set_overlay_css` — prefer `frontend/src/styles/overlay.css` selectors.
+
+**Questions:** `list_questions`, `get_question`, `create_question`, `update_question`, `delete_question`.

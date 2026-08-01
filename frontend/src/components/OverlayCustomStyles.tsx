@@ -8,7 +8,7 @@ const STYLE_ID = 'overlay-custom-css';
 /** Injects Settings → Overlay custom CSS into OBS browser sources. */
 export default function OverlayCustomStyles() {
   const { data } = useQuery<GetAppSettingsData>(GET_APP_SETTINGS, {
-    pollInterval: 5000,
+    pollInterval: 4000,
     fetchPolicy: 'cache-and-network',
   });
   const css = data?.appSettings?.overlayCustomCss ?? '';

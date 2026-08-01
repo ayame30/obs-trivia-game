@@ -180,10 +180,23 @@ export default function Settings() {
         <section className="settings-section">
           <h3>Overlay custom CSS</h3>
           <p className="setup-step__hint">
-            Applied to both the trivia and scoreboard OBS overlays. Useful selectors:{' '}
-            <code>.overlay-page</code>, <code>.overlay-card</code>, <code>.live-round-panel</code>,{' '}
-            <code>.scoreboard-list</code>. Changes apply within a few seconds (or refresh the browser
-            source).
+            Applied to both the trivia and scoreboard OBS overlays. Prefer selectors from{' '}
+            <code>frontend/src/styles/overlay.css</code> (for example <code>.overlay-page</code>,{' '}
+            <code>.overlay-card</code>, <code>.live-round-panel</code>, <code>.scoreboard-list</code>
+            ). Changes apply within a few seconds (or refresh the browser source).
+          </p>
+          <p className="setup-step__hint">
+            Optional: edit via your own chatbot — with the app running, add this Cursor MCP server:
+          </p>
+          <pre className="settings-mcp-config">{`{
+  "mcpServers": {
+    "obs-trivia-game": {
+      "url": "http://127.0.0.1:4000/mcp"
+    }
+  }
+}`}</pre>
+          <p className="setup-step__hint">
+            Details: <code>frontend/docs/overlay-css-mcp.md</code>
           </p>
           <label htmlFor="overlay-custom-css">CSS</label>
           <textarea

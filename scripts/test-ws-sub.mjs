@@ -1,7 +1,7 @@
 import { createClient } from 'graphql-ws';
 import WebSocket from 'ws';
 
-const url = process.env.WS_URL || 'ws://localhost:5000/graphql';
+const url = process.env.WS_URL || 'ws://localhost:4000/graphql';
 
 const client = createClient({
   url,

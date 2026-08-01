@@ -16,6 +16,7 @@ import {
 } from './entities';
 import { GraphqlModule } from './graphql/graphql.module';
 import { HealthController } from './health/health.controller';
+import { McpModule } from './mcp/mcp.module';
 import { PubSubModule } from './pubsub/pubsub.module';
 import { SettingsModule } from './settings/settings.module';
 import { TwitchModule } from './twitch/twitch.module';
@@ -51,12 +52,13 @@ import { TwitchModule } from './twitch/twitch.module';
     }),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'frontend', 'dist'),
-      exclude: ['/graphql*path', '/health*path'],
+      exclude: ['/graphql*path', '/health*path', '/mcp*path'],
     }),
     PubSubModule,
     SettingsModule,
     GraphqlModule,
     TwitchModule,
+    McpModule,
   ],
   controllers: [HealthController],
 })

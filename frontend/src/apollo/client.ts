@@ -39,7 +39,7 @@ const wsLink = new GraphQLWsLink(
     retryAttempts: Infinity,
     shouldRetry: () => true,
     retryWait: async (retries) => {
-      const ms = Math.min(1000 * 2 ** retries, 15000);
+      const ms = Math.min(1000 * 2 ** retries, 14000);
       await new Promise((resolve) => setTimeout(resolve, ms));
     },
     on: {
