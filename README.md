@@ -97,11 +97,16 @@ npm install
 
 ### Run API only
 
+Nest serves the built frontend from `frontend/dist`, so build the UI first:
+
 ```bash
+cd frontend && npm run build && cd ..
 npm run dev
 ```
 
 ### Build UI + API, then start
+
+Builds the frontend and Nest server, then starts Nest (which again serves `frontend/dist`):
 
 ```bash
 npm run build:start
