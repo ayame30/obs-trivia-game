@@ -259,9 +259,6 @@ const SettingsFormFields = memo(function SettingsFormFields({
           Optional: edit via your own chatbot — with the app running, add this MCP server:
         </p>
         <pre className="settings-mcp-config">{mcpConfig}</pre>
-        <p className="setup-step__hint">
-          Details: <code>frontend/docs/overlay-css-mcp.md</code>
-        </p>
         <FormTextArea
           name="overlayCustomCss"
           id="overlay-custom-css"
