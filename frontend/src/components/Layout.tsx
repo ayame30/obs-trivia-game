@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { NavLink, Outlet } from 'react-router';
 import { Trans, useTranslation } from 'react-i18next';
+import AppFooter from './AppFooter';
 import LanguageSwitcher from './LanguageSwitcher';
 
 function isElectronApp(): boolean {
@@ -74,6 +75,7 @@ export default function Layout() {
 
       <main className="layout-body">
         <Outlet />
+        <AppFooter />
       </main>
 
       {confirmClose ? (

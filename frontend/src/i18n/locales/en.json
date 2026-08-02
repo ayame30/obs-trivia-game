@@ -25,7 +25,9 @@
     "done": "Done",
     "saving": "Saving…",
     "enable": "Enable",
-    "loading": "Loading…"
+    "loading": "Loading…",
+    "copyright": "Copyright © {{year}} Obs Trivia game",
+    "reportIssue": "Report an issue"
   },
   "setup": {
     "testMessageDefault": "Obs Trivia game chat test — if you see this, votes are ready!",
@@ -75,6 +77,11 @@
     "liveOverlayHint": "Shows the active question, options, countdown, and votes.",
     "scoreboardOverlay": "Scoreboard overlay",
     "scoreboardOverlayHint": "Shows the top scores during your stream.",
+    "overlayTutorTabs": "Browser source setup guide",
+    "overlayTabObs": "OBS",
+    "overlayTabStreamlabs": "Streamlabs",
+    "overlayTutorAltObs": "OBS Studio browser source settings example",
+    "overlayTutorAltStreamlabs": "Streamlabs Desktop browser source settings example",
     "liveRoundPreview": "Live round preview",
     "resetRoundConfirm": "Reset round #? This clears all round history and votes. The next round will start at #1. Active rounds are cancelled without scoring.",
     "resetRound": "Reset round #"

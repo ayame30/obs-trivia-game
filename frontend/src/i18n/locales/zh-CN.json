@@ -25,7 +25,9 @@
     "done": "完成",
     "saving": "保存中…",
     "enable": "启用",
-    "loading": "加载中…"
+    "loading": "加载中…",
+    "copyright": "Copyright © {{year}} Obs Trivia game",
+    "reportIssue": "反馈问题"
   },
   "setup": {
     "testMessageDefault": "Obs Trivia game 聊天测试 — 若看到此消息，投票已就绪！",
@@ -75,6 +77,11 @@
     "liveOverlayHint": "显示进行中的题目、选项、倒计时与投票。",
     "scoreboardOverlay": "计分板叠加层",
     "scoreboardOverlayHint": "在直播中显示最高分数。",
+    "overlayTutorTabs": "浏览器源设置教程",
+    "overlayTabObs": "OBS",
+    "overlayTabStreamlabs": "Streamlabs",
+    "overlayTutorAltObs": "OBS Studio 浏览器源设置示例",
+    "overlayTutorAltStreamlabs": "Streamlabs Desktop 浏览器源设置示例",
     "liveRoundPreview": "实时回合预览",
     "resetRoundConfirm": "重置回合编号？这将清除所有回合记录与投票。下一回合将从 #1 开始。进行中的回合会取消且不计分。",
     "resetRound": "重置回合 #"
