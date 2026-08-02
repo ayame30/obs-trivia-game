@@ -55,7 +55,7 @@ Twitch chat trivia with live OBS overlays (ABCD votes, scoreboard, countdown).
 
 ## For streamers (no coding)
 
-1. Download the Windows installer (`ObsTriviaGame-*-x64.exe`) from the [Releases page](https://github.com/ayame30/abs-trivia-game/releases).
+1. Download the Windows installer (`ObsTriviaGame-*-x64.exe`) from the [Releases page](https://github.com/ayame30/obs-trivia-game/releases).
 2. Install / double-click to open **Obs Trivia game**.
 3. Sign in with Twitch in the app and finish the setup steps.
 4. In OBS or Streamlabs, add **Browser Sources**:
