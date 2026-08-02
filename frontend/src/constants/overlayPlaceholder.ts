@@ -1,5 +1,7 @@
 import type { Round } from '../types';
+import { DEFAULT_IDLE_QUESTION_TEXT } from '../hooks/useAppSettings';
 
+/** Structural placeholder only — idle question text comes from app settings. */
 export const OVERLAY_PLACEHOLDER_ROUND: Round = {
   id: '—',
   questionId: '0',
@@ -7,7 +9,7 @@ export const OVERLAY_PLACEHOLDER_ROUND: Round = {
   startedAt: '',
   question: {
     id: '0',
-    text: '即將開始',
+    text: DEFAULT_IDLE_QUESTION_TEXT,
     optionA: '',
     optionB: '',
     optionC: '',

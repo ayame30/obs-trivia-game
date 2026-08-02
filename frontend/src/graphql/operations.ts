@@ -226,6 +226,12 @@ export const GET_APP_SETTINGS = gql`
       cutoffChatMessage
       scoreMultiplier
       overlayCustomCss
+      roundLabelTemplate
+      roundLabelIdle
+      idleQuestionText
+      countdownLabel
+      countdownPausedLabel
+      countdownValueTemplate
       updatedAt
     }
   }
@@ -240,6 +246,12 @@ export const UPDATE_APP_SETTINGS = gql`
       cutoffChatMessage
       scoreMultiplier
       overlayCustomCss
+      roundLabelTemplate
+      roundLabelIdle
+      idleQuestionText
+      countdownLabel
+      countdownPausedLabel
+      countdownValueTemplate
       updatedAt
     }
   }

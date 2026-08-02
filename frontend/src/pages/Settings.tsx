@@ -15,7 +15,44 @@ const emptyForm: AppSettingsFormState = {
   cutoffChatMessage: '',
   scoreMultiplier: 10,
   overlayCustomCss: '',
+  roundLabelTemplate: '第{{round}}題',
+  roundLabelIdle: '第0題',
+  idleQuestionText: '即將開始',
+  countdownLabel: '倒數時間',
+  countdownPausedLabel: '暫停倒數',
+  countdownValueTemplate: '{{seconds}}s',
 };
+
+function settingsToForm(s: {
+  showQuestionChat: boolean;
+  questionChatTemplate: string;
+  showCutoffChat: boolean;
+  cutoffChatMessage: string;
+  scoreMultiplier: number;
+  overlayCustomCss?: string | null;
+  roundLabelTemplate: string;
+  roundLabelIdle: string;
+  idleQuestionText: string;
+  countdownLabel: string;
+  countdownPausedLabel: string;
+  countdownValueTemplate: string;
+}): AppSettingsFormState {
+  return {
+    showQuestionChat: s.showQuestionChat,
+    questionChatTemplate: s.questionChatTemplate,
+    showCutoffChat: s.showCutoffChat,
+    cutoffChatMessage: s.cutoffChatMessage,
+    scoreMultiplier: s.scoreMultiplier,
+    overlayCustomCss: s.overlayCustomCss ?? '',
+    roundLabelTemplate: s.roundLabelTemplate,
+    roundLabelIdle: s.roundLabelIdle,
+    idleQuestionText: s.idleQuestionText,
+    countdownLabel: s.countdownLabel,
+    countdownPausedLabel: s.countdownPausedLabel,
+    countdownValueTemplate: s.countdownValueTemplate,
+  };
+}
+
 
 /** MCP runs on the Nest API, not the Vite UI port. */
 function getMcpServerUrl(): string {
@@ -55,15 +92,7 @@ export default function Settings() {
     UPDATE_APP_SETTINGS,
     {
       onCompleted: (res) => {
-        const s = res.updateAppSettings;
-        setForm({
-          showQuestionChat: s.showQuestionChat,
-          questionChatTemplate: s.questionChatTemplate,
-          showCutoffChat: s.showCutoffChat,
-          cutoffChatMessage: s.cutoffChatMessage,
-          scoreMultiplier: s.scoreMultiplier,
-          overlayCustomCss: s.overlayCustomCss ?? '',
-        });
+        setForm(settingsToForm(res.updateAppSettings));
         setSaved(true);
       },
     }
@@ -72,14 +101,7 @@ export default function Settings() {
   useEffect(() => {
     const s = data?.appSettings;
     if (!s) return;
-    setForm({
-      showQuestionChat: s.showQuestionChat,
-      questionChatTemplate: s.questionChatTemplate,
-      showCutoffChat: s.showCutoffChat,
-      cutoffChatMessage: s.cutoffChatMessage,
-      scoreMultiplier: s.scoreMultiplier,
-      overlayCustomCss: s.overlayCustomCss ?? '',
-    });
+    setForm(settingsToForm(s));
   }, [data]);
 
   const handleSubmit = (e: FormEvent) => {
@@ -98,6 +120,12 @@ export default function Settings() {
           cutoffChatMessage: form.cutoffChatMessage,
           scoreMultiplier: multiplier,
           overlayCustomCss: form.overlayCustomCss,
+          roundLabelTemplate: form.roundLabelTemplate,
+          roundLabelIdle: form.roundLabelIdle,
+          idleQuestionText: form.idleQuestionText,
+          countdownLabel: form.countdownLabel,
+          countdownPausedLabel: form.countdownPausedLabel,
+          countdownValueTemplate: form.countdownValueTemplate,
         },
       },
     });
@@ -116,10 +144,96 @@ export default function Settings() {
     <div className="card settings-page">
       <h2>Settings</h2>
       <p className="setup-step__hint">
-        Configure Twitch chat announcements, score display, and overlay styling.
+        Configure Twitch chat announcements, score display, overlay labels, and overlay styling.
       </p>
 
       <form className="form-grid" onSubmit={handleSubmit}>
+        <section className="settings-section">
+          <h3>Overlay labels</h3>
+          <p className="setup-step__hint">
+            Text shown on the live round preview and OBS trivia overlay.
+          </p>
+          <label htmlFor="round-label-template">Active round label</label>
+          <input
+            id="round-label-template"
+            type="text"
+            value={form.roundLabelTemplate}
+            onChange={(e) => {
+              setSaved(false);
+              setForm({ ...form, roundLabelTemplate: e.target.value });
+            }}
+            required
+          />
+          <p className="setup-step__hint">
+            Use <code>{'{{round}}'}</code> for the round id. Default: <code>第{'{{round}}'}題</code>
+          </p>
+          <label htmlFor="round-label-idle">Idle / placeholder label</label>
+          <input
+            id="round-label-idle"
+            type="text"
+            value={form.roundLabelIdle}
+            onChange={(e) => {
+              setSaved(false);
+              setForm({ ...form, roundLabelIdle: e.target.value });
+            }}
+            required
+          />
+          <p className="setup-step__hint">
+            Shown when no round is active. Default: <code>第0題</code>
+          </p>
+          <label htmlFor="idle-question-text">Idle question text</label>
+          <input
+            id="idle-question-text"
+            type="text"
+            value={form.idleQuestionText}
+            onChange={(e) => {
+              setSaved(false);
+              setForm({ ...form, idleQuestionText: e.target.value });
+            }}
+            required
+          />
+          <p className="setup-step__hint">
+            Placeholder question body when idle. Default: <code>即將開始</code>
+          </p>
+          <label htmlFor="countdown-label">Countdown label</label>
+          <input
+            id="countdown-label"
+            type="text"
+            value={form.countdownLabel}
+            onChange={(e) => {
+              setSaved(false);
+              setForm({ ...form, countdownLabel: e.target.value });
+            }}
+            required
+          />
+          <label htmlFor="countdown-paused-label">Paused countdown label</label>
+          <input
+            id="countdown-paused-label"
+            type="text"
+            value={form.countdownPausedLabel}
+            onChange={(e) => {
+              setSaved(false);
+              setForm({ ...form, countdownPausedLabel: e.target.value });
+            }}
+            required
+          />
+          <label htmlFor="countdown-value-template">Countdown value</label>
+          <input
+            id="countdown-value-template"
+            type="text"
+            value={form.countdownValueTemplate}
+            onChange={(e) => {
+              setSaved(false);
+              setForm({ ...form, countdownValueTemplate: e.target.value });
+            }}
+            required
+          />
+          <p className="setup-step__hint">
+            Use <code>{'{{seconds}}'}</code> for remaining time. Default:{' '}
+            <code>{'{{seconds}}s'}</code>
+          </p>
+        </section>
+
         <section className="settings-section">
           <h3>Chat question message</h3>
           <label className="settings-toggle">

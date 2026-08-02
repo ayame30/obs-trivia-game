@@ -227,6 +227,24 @@ export class AppSettingsModel {
   overlayCustomCss!: string;
 
   @Field()
+  roundLabelTemplate!: string;
+
+  @Field()
+  roundLabelIdle!: string;
+
+  @Field()
+  idleQuestionText!: string;
+
+  @Field()
+  countdownLabel!: string;
+
+  @Field()
+  countdownPausedLabel!: string;
+
+  @Field()
+  countdownValueTemplate!: string;
+
+  @Field()
   updatedAt!: string;
 }
 
@@ -249,6 +267,24 @@ export class UpdateAppSettingsInput {
 
   @Field({ nullable: true })
   overlayCustomCss?: string;
+
+  @Field({ nullable: true })
+  roundLabelTemplate?: string;
+
+  @Field({ nullable: true })
+  roundLabelIdle?: string;
+
+  @Field({ nullable: true })
+  idleQuestionText?: string;
+
+  @Field({ nullable: true })
+  countdownLabel?: string;
+
+  @Field({ nullable: true })
+  countdownPausedLabel?: string;
+
+  @Field({ nullable: true })
+  countdownValueTemplate?: string;
 }
 
 @ObjectType()

@@ -65,6 +65,12 @@ export interface AppSettings {
   cutoffChatMessage: string;
   scoreMultiplier: number;
   overlayCustomCss: string;
+  roundLabelTemplate: string;
+  roundLabelIdle: string;
+  idleQuestionText: string;
+  countdownLabel: string;
+  countdownPausedLabel: string;
+  countdownValueTemplate: string;
   updatedAt: string;
 }
 
@@ -75,6 +81,12 @@ export interface AppSettingsFormState {
   cutoffChatMessage: string;
   scoreMultiplier: number | string;
   overlayCustomCss: string;
+  roundLabelTemplate: string;
+  roundLabelIdle: string;
+  idleQuestionText: string;
+  countdownLabel: string;
+  countdownPausedLabel: string;
+  countdownValueTemplate: string;
 }
 
 export interface GetAppSettingsData {
