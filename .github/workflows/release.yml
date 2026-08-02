@@ -22,6 +22,7 @@ jobs:
   windows:
     name: Build & publish Windows
     runs-on: windows-latest
+    environment: Release
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -70,7 +71,12 @@ jobs:
         shell: pwsh
         run: |
           if ([string]::IsNullOrWhiteSpace($env:TWITCH_CLIENT_ID)) {
-            throw "Repository secret TWITCH_CLIENT_ID is required for release builds."
+            throw @"
+          TWITCH_CLIENT_ID is missing from the Release environment.
+
+          GitHub → Settings → Environments → Release → Environment secrets
+          Add secret TWITCH_CLIENT_ID (same value as local .env), then re-run.
+          "@
           }
           if ($env:TWITCH_CLIENT_ID -eq 'your_twitch_client_id') {
             throw "TWITCH_CLIENT_ID secret is still a placeholder."
