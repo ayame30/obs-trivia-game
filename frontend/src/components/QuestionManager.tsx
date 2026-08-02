@@ -432,7 +432,7 @@ export default function QuestionManager({
         </>
       )}
 
-      {isStreamMode ? (
+      {isStreamMode && hasActive ? (
         <div className="question-manager__round-actions">
           {countdownPaused ? (
             <button
