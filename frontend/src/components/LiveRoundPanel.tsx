@@ -24,7 +24,7 @@ export default function LiveRoundPanel({
   const q = displayRound.question;
   const questionText = isPlaceholder ? idleQuestionText : q.text;
   const roundLabel = isPlaceholder
-    ? roundLabelIdle
+    ? (roundLabelIdle)
     : formatRoundLabel(roundLabelTemplate, round?.id ?? '');
 
   return (
@@ -32,17 +32,17 @@ export default function LiveRoundPanel({
       <div className="live-round-panel__stage">
         <div className="live-round-panel__question">
           <div className="live-round-panel__question_header">
-            <div className="live-round-panel__question_count_text">{roundLabel}</div>
+            <div className="live-round-panel__question_count_text">{roundLabel || '\u00A0'}</div>
             <div className="live-round-panel__countdown-slot">
               <CountdownDisplay round={round} variant={countdownVariant} />
             </div>
           </div>
           <div className="live-round-panel__question_text">
-            <ResizeText text={questionText} />
+            <ResizeText text={questionText || '\u00A0'} />
           </div>
         </div>
 
-        <div className="live-round-panel__options">
+        <div className="live-round-panel__options"> 
           {OPTION_KEYS.map((key) => {
             const count = displayRound.voteCounts?.[key];
             const isCorrect = showCorrect && !isPlaceholder && q.correctAnswer === key;
@@ -52,7 +52,7 @@ export default function LiveRoundPanel({
                 className={`live-round-panel__option${isCorrect ? ' live-round-panel__option--correct' : ''}`}
               >
                 <span className="live-round-panel__option_label">{key}</span>
-                <ResizeText text={q[`option${key}`]} />
+                <ResizeText text={q[`option${key}`] || '\u00A0'} />
                 {count ? (
                   <div className="live-round-panel__vote-count">
                     <span>{count}</span>

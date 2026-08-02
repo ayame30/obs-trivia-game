@@ -13,6 +13,7 @@ export interface AppSettingsValues {
   countdownLabel: string;
   countdownPausedLabel: string;
   countdownValueTemplate: string;
+  uiLocale: string;
   updatedAt: string;
 }
 
@@ -29,6 +30,7 @@ export type UpdateAppSettingsInput = Partial<{
   countdownLabel: string;
   countdownPausedLabel: string;
   countdownValueTemplate: string;
+  uiLocale: string;
 }>;
 
 export type RequiredStringFieldKey =

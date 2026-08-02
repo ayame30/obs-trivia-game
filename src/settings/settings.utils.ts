@@ -1,10 +1,13 @@
 import {
   BOOLEAN_FIELDS,
   DEFAULT_SCORE_MULTIPLIER,
+  DEFAULT_UI_LOCALE,
   REQUIRED_STRING_FIELDS,
   SETTINGS_DEFAULTS,
   SETTINGS_KEYS,
+  SUPPORTED_UI_LOCALES,
   type SettingKey,
+  type UiLocale,
 } from './settings.constants';
 import type { AppSettingsValues, WideMigrationField } from './settings.types';
 
@@ -19,6 +22,20 @@ export function assertPositiveInteger(value: unknown, label: string): number {
     throw new Error(`${label} must be a positive integer`);
   }
   return n;
+}
+
+export function parseUiLocale(raw: string): UiLocale {
+  return (SUPPORTED_UI_LOCALES as readonly string[]).includes(raw)
+    ? (raw as UiLocale)
+    : DEFAULT_UI_LOCALE;
+}
+
+export function assertUiLocale(value: unknown): UiLocale {
+  const locale = String(value ?? '').trim();
+  if (!(SUPPORTED_UI_LOCALES as readonly string[]).includes(locale)) {
+    throw new Error(`UI locale must be one of: ${SUPPORTED_UI_LOCALES.join(', ')}`);
+  }
+  return locale as UiLocale;
 }
 
 export function latestUpdatedAt(rows: Array<{ updatedAt?: Date | string | null }>): string {
@@ -67,6 +84,7 @@ export function buildAppSettingsValues(
     ...strings,
     scoreMultiplier: parseScoreMultiplier(get(SETTINGS_KEYS.scoreMultiplier)),
     overlayCustomCss: get(SETTINGS_KEYS.overlayCustomCss) ?? '',
+    uiLocale: parseUiLocale(get(SETTINGS_KEYS.uiLocale)),
     updatedAt,
   };
 }

@@ -71,6 +71,7 @@ export interface AppSettings {
   countdownLabel: string;
   countdownPausedLabel: string;
   countdownValueTemplate: string;
+  uiLocale: string;
   updatedAt: string;
 }
 

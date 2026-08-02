@@ -1,4 +1,5 @@
 import { memo, useMemo, useState } from 'react';
+import { Trans, useTranslation } from 'react-i18next';
 import { Form, Formik } from 'formik';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { FaSave } from 'react-icons/fa';
@@ -86,6 +87,24 @@ function isMultiplierInvalid(value: number | string): boolean {
   return value === '' || !Number.isInteger(Number(value)) || Number(value) <= 0;
 }
 
+const SETTINGS_HINT_VALUES = {
+  roundToken: '{{round}}',
+  roundDefault: '第{{round}}題',
+  idleDefault: '第0題',
+  idleQuestionDefault: '即將開始',
+  secondsToken: '{{seconds}}',
+  secondsDefault: '{{seconds}}s',
+  pRound: '{{round}}',
+  pQuestion: '{{question}}',
+  pA: '{{answerA}}',
+  pB: '{{answerB}}',
+  pC: '{{answerC}}',
+  pD: '{{answerD}}',
+  pCountdown: '{{countDownSecond}}',
+  chatDefault:
+    'Q{{round}}:  {{question}} A ) {{answerA}} B ) {{answerB}} C ) {{answerC}} D ) {{answerD}}',
+};
+
 const SettingsFormFields = memo(function SettingsFormFields({
   showQuestionChat,
   showCutoffChat,
@@ -105,104 +124,118 @@ const SettingsFormFields = memo(function SettingsFormFields({
   errorMessage: string | null;
   onEdited: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <>
       <section className="settings-section">
-        <h3>Overlay labels</h3>
-        <p className="setup-step__hint">
-          Text shown on the live round preview and OBS trivia overlay.
-        </p>
+        <h3>{t('settings.overlayLabels')}</h3>
+        <p className="setup-step__hint">{t('settings.overlayLabelsHint')}</p>
         <FormTextInput
           name="roundLabelTemplate"
           id="round-label-template"
-          label="Active round label"
+          label={t('settings.roundLabelTemplate')}
           required
           onEdited={onEdited}
           hint={
             <p className="setup-step__hint">
-              Use <code>{'{{round}}'}</code> for the round id. Default: <code>第{'{{round}}'}題</code>
+              <Trans
+                i18nKey="settings.roundLabelTemplateHint"
+                values={SETTINGS_HINT_VALUES}
+                components={{ code: <code /> }}
+              />
             </p>
           }
         />
         <FormTextInput
           name="roundLabelIdle"
           id="round-label-idle"
-          label="Idle / placeholder label"
+          label={t('settings.roundLabelIdle')}
           required
           onEdited={onEdited}
           hint={
             <p className="setup-step__hint">
-              Shown when no round is active. Default: <code>第0題</code>
+              <Trans
+                i18nKey="settings.roundLabelIdleHint"
+                values={SETTINGS_HINT_VALUES}
+                components={{ code: <code /> }}
+              />
             </p>
           }
         />
         <FormTextInput
           name="idleQuestionText"
           id="idle-question-text"
-          label="Idle question text"
+          label={t('settings.idleQuestionText')}
           required
           onEdited={onEdited}
           hint={
             <p className="setup-step__hint">
-              Placeholder question body when idle. Default: <code>即將開始</code>
+              <Trans
+                i18nKey="settings.idleQuestionTextHint"
+                values={SETTINGS_HINT_VALUES}
+                components={{ code: <code /> }}
+              />
             </p>
           }
         />
         <FormTextInput
           name="countdownLabel"
           id="countdown-label"
-          label="Countdown label"
+          label={t('settings.countdownLabel')}
           required
           onEdited={onEdited}
         />
         <FormTextInput
           name="countdownPausedLabel"
           id="countdown-paused-label"
-          label="Paused countdown label"
+          label={t('settings.countdownPausedLabel')}
           required
           onEdited={onEdited}
         />
         <FormTextInput
           name="countdownValueTemplate"
           id="countdown-value-template"
-          label="Countdown value"
+          label={t('settings.countdownValue')}
           required
           onEdited={onEdited}
           hint={
             <p className="setup-step__hint">
-              Use <code>{'{{seconds}}'}</code> for remaining time. Default:{' '}
-              <code>{'{{seconds}}s'}</code>
+              <Trans
+                i18nKey="settings.countdownValueHint"
+                values={SETTINGS_HINT_VALUES}
+                components={{ code: <code /> }}
+              />
             </p>
           }
         />
       </section>
 
       <section className="settings-section">
-        <h3>Chat question message</h3>
-        <FormCheckbox name="showQuestionChat" label="Enable" onEdited={onEdited} />
+        <h3>{t('settings.chatQuestion')}</h3>
+        <FormCheckbox name="showQuestionChat" label={t('common.enable')} onEdited={onEdited} />
         {showQuestionChat ? (
           <FormTextArea
             name="questionChatTemplate"
             id="question-chat-template"
-            label="Message template"
+            label={t('settings.messageTemplate')}
             rows={6}
             required
             onEdited={onEdited}
             hint={
               <>
                 <p className="setup-step__hint">
-                  Placeholders: <code>{'{{round}}'}</code> <code>{'{{question}}'}</code>{' '}
-                  <code>{'{{answerA}}'}</code> <code>{'{{answerB}}'}</code>{' '}
-                  <code>{'{{answerC}}'}</code> <code>{'{{answerD}}'}</code>{' '}
-                  <code>{'{{countDownSecond}}'}</code>
+                  <Trans
+                    i18nKey="settings.chatQuestionPlaceholders"
+                    values={SETTINGS_HINT_VALUES}
+                    components={{ code: <code /> }}
+                  />
                 </p>
                 <p className="setup-step__hint">
-                  Default:{' '}
-                  <code>
-                    {
-                      'Q{{round}}:  {{question}} A ) {{answerA}} B ) {{answerB}} C ) {{answerC}} D ) {{answerD}}'
-                    }
-                  </code>
+                  <Trans
+                    i18nKey="settings.chatQuestionDefault"
+                    values={SETTINGS_HINT_VALUES}
+                    components={{ code: <code /> }}
+                  />
                 </p>
               </>
             }
@@ -211,13 +244,13 @@ const SettingsFormFields = memo(function SettingsFormFields({
       </section>
 
       <section className="settings-section">
-        <h3>Chat cutoff message</h3>
-        <FormCheckbox name="showCutoffChat" label="Enable" onEdited={onEdited} />
+        <h3>{t('settings.chatCutoff')}</h3>
+        <FormCheckbox name="showCutoffChat" label={t('common.enable')} onEdited={onEdited} />
         {showCutoffChat ? (
           <FormTextArea
             name="cutoffChatMessage"
             id="cutoff-chat-message"
-            label="Message template"
+            label={t('settings.messageTemplate')}
             rows={2}
             required
             onEdited={onEdited}
@@ -226,14 +259,12 @@ const SettingsFormFields = memo(function SettingsFormFields({
       </section>
 
       <section className="settings-section">
-        <h3>Score multiplier</h3>
-        <p className="setup-step__hint">
-          Displayed score = stored points × multiplier. Default is 10. Must be a positive integer.
-        </p>
+        <h3>{t('settings.scoreMultiplier')}</h3>
+        <p className="setup-step__hint">{t('settings.scoreMultiplierHint')}</p>
         <FormTextInput
           name="scoreMultiplier"
           id="score-multiplier"
-          label="Multiplier"
+          label={t('settings.multiplier')}
           type="number"
           min={1}
           step={1}
@@ -241,28 +272,21 @@ const SettingsFormFields = memo(function SettingsFormFields({
           onEdited={onEdited}
         />
         {multiplierInvalid ? (
-          <p className="setup-step__error">
-            Score multiplier must be a positive integer (not 0 or negative).
-          </p>
+          <p className="setup-step__error">{t('settings.multiplierInvalid')}</p>
         ) : null}
       </section>
 
       <section className="settings-section">
-        <h3>Overlay custom CSS</h3>
+        <h3>{t('settings.overlayCss')}</h3>
         <p className="setup-step__hint">
-          Applied to both the trivia and scoreboard OBS overlays. Prefer selectors from{' '}
-          <code>frontend/src/styles/overlay.css</code> (for example <code>.overlay-page</code>,{' '}
-          <code>.overlay-card</code>, <code>.live-round-panel</code>, <code>.scoreboard-list</code>
-          ). Changes apply within a few seconds (or refresh the browser source).
+          <Trans i18nKey="settings.overlayCssHint" components={{ code: <code /> }} />
         </p>
-        <p className="setup-step__hint">
-          Optional: edit via your own chatbot — with the app running, add this MCP server:
-        </p>
+        <p className="setup-step__hint">{t('settings.mcpHint')}</p>
         <pre className="settings-mcp-config">{mcpConfig}</pre>
         <FormTextArea
           name="overlayCustomCss"
           id="overlay-custom-css"
-          label="CSS"
+          label={t('settings.css')}
           className="settings-css-editor"
           rows={12}
           spellCheck={false}
@@ -274,17 +298,18 @@ const SettingsFormFields = memo(function SettingsFormFields({
       <div className="form-actions">
         <button type="submit" disabled={saving || multiplierInvalid}>
           <FaSave aria-hidden />
-          {saving ? 'Saving…' : 'Save settings'}
+          {saving ? t('common.saving') : t('settings.save')}
         </button>
       </div>
 
       {errorMessage ? <p className="setup-step__error">{errorMessage}</p> : null}
-      {saved ? <p className="setup-step__success">Settings saved.</p> : null}
+      {saved ? <p className="setup-step__success">{t('settings.saved')}</p> : null}
     </>
   );
 });
 
 function Settings() {
+  const { t } = useTranslation();
   const { data, loading } = useQuery<GetAppSettingsData>(GET_APP_SETTINGS);
   const [saved, setSaved] = useState(false);
   const mcpUrl = getMcpServerUrl();
@@ -303,15 +328,13 @@ function Settings() {
   );
 
   if (loading && !data) {
-    return <p style={{ color: 'var(--muted)' }}>Loading settings…</p>;
+    return <p style={{ color: 'var(--muted)' }}>{t('settings.loading')}</p>;
   }
 
   return (
     <div className="card settings-page">
-      <h2>Settings</h2>
-      <p className="setup-step__hint">
-        Configure Twitch chat announcements, score display, overlay labels, and overlay styling.
-      </p>
+      <h2>{t('settings.title')}</h2>
+      <p className="setup-step__hint">{t('settings.intro')}</p>
 
       <Formik<AppSettingsFormState>
         initialValues={initialValues}

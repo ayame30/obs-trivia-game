@@ -232,6 +232,7 @@ export const GET_APP_SETTINGS = gql`
       countdownLabel
       countdownPausedLabel
       countdownValueTemplate
+      uiLocale
       updatedAt
     }
   }
@@ -252,6 +253,7 @@ export const UPDATE_APP_SETTINGS = gql`
       countdownLabel
       countdownPausedLabel
       countdownValueTemplate
+      uiLocale
       updatedAt
     }
   }

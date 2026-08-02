@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { Trans, useTranslation } from 'react-i18next';
 import { useMutation } from '@apollo/client/react';
 import { FaSyncAlt, FaEdit, FaSave, FaTimes } from 'react-icons/fa';
 import { UPDATE_SCOREBOARD } from '../graphql/operations';
@@ -34,6 +35,7 @@ export default function ScoreboardEditor({
   onReset,
   resetting = false,
 }: ScoreboardEditorProps) {
+  const { t } = useTranslation();
   const { scoreMultiplier } = useAppSettings();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<Record<string, number>>({});
@@ -110,7 +112,7 @@ export default function ScoreboardEditor({
   };
 
   const cancelEdit = () => {
-    if (isDirty && !window.confirm('Discard unsaved score changes?')) return;
+    if (isDirty && !window.confirm(t('scoreboard.discardConfirm'))) return;
     setDraft(buildDraft(entries));
     setSaveError(null);
     setEditing(false);
@@ -144,7 +146,7 @@ export default function ScoreboardEditor({
   return (
     <div className="scoreboard-editor">
       <div className="setup-step__live-header">
-        <h3>Scoreboard</h3>
+        <h3>{t('scoreboard.title')}</h3>
         <div className="scoreboard-editor-toolbar">
           {onReset ? (
             <button
@@ -154,23 +156,27 @@ export default function ScoreboardEditor({
               onClick={openResetConfirm}
             >
               <FaSyncAlt aria-hidden />
-              Reset
+              {t('scoreboard.reset')}
             </button>
           ) : null}
           {!editing ? (
             <button type="button" className="secondary" onClick={startEdit} disabled={!entries?.length}>
               <FaEdit aria-hidden />
-              Edit
+              {t('scoreboard.edit')}
             </button>
           ) : (
             <>
               <button type="button" disabled={saving} onClick={save}>
                 <FaSave aria-hidden />
-                {saving ? 'Saving…' : `Save${isDirty ? ` (${dirtyUpdates.length})` : ''}`}
+                {saving
+                  ? t('common.saving')
+                  : isDirty
+                    ? t('scoreboard.saveCount', { count: dirtyUpdates.length })
+                    : t('scoreboard.save')}
               </button>
               <button type="button" className="secondary" disabled={saving} onClick={cancelEdit}>
                 <FaTimes aria-hidden />
-                Cancel
+                {t('scoreboard.cancel')}
               </button>
             </>
           )}
@@ -178,9 +184,7 @@ export default function ScoreboardEditor({
       </div>
 
       {!entries?.length ? (
-        <p className="setup-step__hint">
-          No scores yet. Correct answers earn points when you stop a round.
-        </p>
+        <p className="setup-step__hint">{t('scoreboard.empty')}</p>
       ) : (
         <ol className={`scoreboard-list${editing ? ' scoreboard-list--editable' : ''}`}>
           {sorted.map((entry, i) => (
@@ -195,7 +199,7 @@ export default function ScoreboardEditor({
                     className="secondary scoreboard-btn"
                     disabled={saving}
                     onClick={() => adjust(entry.twitchUserId, -1)}
-                    aria-label={`Decrease ${entry.displayName} score`}
+                    aria-label={t('scoreboard.decreaseScore', { name: entry.displayName })}
                   >
                     −
                   </button>
@@ -212,7 +216,7 @@ export default function ScoreboardEditor({
                     className="secondary scoreboard-btn"
                     disabled={saving}
                     onClick={() => adjust(entry.twitchUserId, 1)}
-                    aria-label={`Increase ${entry.displayName} score`}
+                    aria-label={t('scoreboard.increaseScore', { name: entry.displayName })}
                   >
                     +
                   </button>
@@ -245,23 +249,26 @@ export default function ScoreboardEditor({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="modal__header">
-              <h3 id="scoreboard-reset-title">Reset scoreboard?</h3>
+              <h3 id="scoreboard-reset-title">{t('scoreboard.resetTitle')}</h3>
               <button
                 type="button"
                 className="modal__close secondary"
                 onClick={closeResetConfirm}
-                aria-label="Close"
+                aria-label={t('questions.close')}
               >
                 <FaTimes aria-hidden />
               </button>
             </div>
             <form className="modal__body" onSubmit={submitReset}>
               <p className="confirm-modal__copy">
-                This clears every score on the board. Type <strong>{RESET_CONFIRM_WORD}</strong> to
-                continue.
+                <Trans
+                  i18nKey="scoreboard.resetBody"
+                  values={{ word: RESET_CONFIRM_WORD }}
+                  components={{ strong: <strong /> }}
+                />
               </p>
               <label className="confirm-modal__label" htmlFor="scoreboard-reset-confirm">
-                Confirmation
+                {t('scoreboard.confirmation')}
               </label>
               <input
                 id="scoreboard-reset-confirm"
@@ -276,10 +283,10 @@ export default function ScoreboardEditor({
               />
               <div className="form-actions confirm-modal__actions">
                 <button type="button" className="secondary" onClick={closeResetConfirm} disabled={resetting}>
-                  Cancel
+                  {t('scoreboard.cancel')}
                 </button>
                 <button type="submit" disabled={!canConfirmReset || resetting}>
-                  {resetting ? 'Resetting…' : 'Reset scores'}
+                  {resetting ? t('scoreboard.resetting') : t('scoreboard.resetScores')}
                 </button>
               </div>
             </form>

@@ -3,12 +3,15 @@ export const DEFAULT_QUESTION_CHAT_TEMPLATE =
 
 export const DEFAULT_CUTOFF_CHAT_MESSAGE = '===== END =====';
 export const DEFAULT_SCORE_MULTIPLIER = 10;
-export const DEFAULT_ROUND_LABEL_TEMPLATE = '第{{round}}題';
-export const DEFAULT_ROUND_LABEL_IDLE = '第0題';
-export const DEFAULT_IDLE_QUESTION_TEXT = '即將開始';
-export const DEFAULT_COUNTDOWN_LABEL = '倒數時間';
-export const DEFAULT_COUNTDOWN_PAUSED_LABEL = '暫停倒數';
+export const DEFAULT_ROUND_LABEL_TEMPLATE = 'Q{{round}}';
+export const DEFAULT_ROUND_LABEL_IDLE = 'Q0';
+export const DEFAULT_IDLE_QUESTION_TEXT = 'Waiting for next question...';
+export const DEFAULT_COUNTDOWN_LABEL = 'Countdown';
+export const DEFAULT_COUNTDOWN_PAUSED_LABEL = 'Paused';
 export const DEFAULT_COUNTDOWN_VALUE_TEMPLATE = '{{seconds}}s';
+export const DEFAULT_UI_LOCALE = 'en';
+export const SUPPORTED_UI_LOCALES = ['en', 'zh-TW', 'zh-CN', 'ja'] as const;
+export type UiLocale = (typeof SUPPORTED_UI_LOCALES)[number];
 
 /** Older multiline chat template — rewritten to the single-line default on boot. */
 export const LEGACY_QUESTION_CHAT_TEMPLATE = [
@@ -32,6 +35,7 @@ export const SETTINGS_KEYS = {
   countdownLabel: 'countdown_label',
   countdownPausedLabel: 'countdown_paused_label',
   countdownValueTemplate: 'countdown_value_template',
+  uiLocale: 'ui_locale',
 } as const;
 
 export type SettingKey = (typeof SETTINGS_KEYS)[keyof typeof SETTINGS_KEYS];
@@ -49,6 +53,7 @@ export const SETTINGS_DEFAULTS: Record<SettingKey, string> = {
   [SETTINGS_KEYS.countdownLabel]: DEFAULT_COUNTDOWN_LABEL,
   [SETTINGS_KEYS.countdownPausedLabel]: DEFAULT_COUNTDOWN_PAUSED_LABEL,
   [SETTINGS_KEYS.countdownValueTemplate]: DEFAULT_COUNTDOWN_VALUE_TEMPLATE,
+  [SETTINGS_KEYS.uiLocale]: DEFAULT_UI_LOCALE,
 };
 
 export const REQUIRED_STRING_FIELDS = [

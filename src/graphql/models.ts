@@ -245,6 +245,9 @@ export class AppSettingsModel {
   countdownValueTemplate!: string;
 
   @Field()
+  uiLocale!: string;
+
+  @Field()
   updatedAt!: string;
 }
 
@@ -285,6 +288,9 @@ export class UpdateAppSettingsInput {
 
   @Field({ nullable: true })
   countdownValueTemplate?: string;
+
+  @Field({ nullable: true })
+  uiLocale?: string;
 }
 
 @ObjectType()

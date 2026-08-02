@@ -3,12 +3,13 @@ import { GET_APP_SETTINGS } from '../graphql/operations';
 import type { AppSettings, GetAppSettingsData } from '../types';
 
 export const DEFAULT_SCORE_MULTIPLIER = 10;
-export const DEFAULT_ROUND_LABEL_TEMPLATE = '第{{round}}題';
-export const DEFAULT_ROUND_LABEL_IDLE = '第0題';
-export const DEFAULT_IDLE_QUESTION_TEXT = '即將開始';
-export const DEFAULT_COUNTDOWN_LABEL = '倒數時間';
-export const DEFAULT_COUNTDOWN_PAUSED_LABEL = '暫停倒數';
+export const DEFAULT_ROUND_LABEL_TEMPLATE = 'Q{{round}}';
+export const DEFAULT_ROUND_LABEL_IDLE = 'Q0';
+export const DEFAULT_IDLE_QUESTION_TEXT = 'Waiting for next question...';
+export const DEFAULT_COUNTDOWN_LABEL = 'Countdown';
+export const DEFAULT_COUNTDOWN_PAUSED_LABEL = 'Paused';
 export const DEFAULT_COUNTDOWN_VALUE_TEMPLATE = '{{seconds}}s';
+export const DEFAULT_UI_LOCALE = 'en';
 
 export function formatRoundLabel(template: string, roundId: string | number): string {
   return template.replace(/\{\{round\}\}/g, String(roundId));
@@ -34,6 +35,7 @@ export function useAppSettings() {
     settings?.countdownPausedLabel || DEFAULT_COUNTDOWN_PAUSED_LABEL;
   const countdownValueTemplate =
     settings?.countdownValueTemplate || DEFAULT_COUNTDOWN_VALUE_TEMPLATE;
+  const uiLocale = settings?.uiLocale || DEFAULT_UI_LOCALE;
 
   return {
     settings,
@@ -44,6 +46,7 @@ export function useAppSettings() {
     countdownLabel,
     countdownPausedLabel,
     countdownValueTemplate,
+    uiLocale,
     loading,
     error: error?.message ?? null,
     refetch,

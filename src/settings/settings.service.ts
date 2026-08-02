@@ -15,6 +15,7 @@ import {
 import type { AppSettingsValues, UpdateAppSettingsInput } from './settings.types';
 import {
   assertPositiveInteger,
+  assertUiLocale,
   buildAppSettingsValues,
   isKeyValueSettingsSchema,
   isLegacyWideSettingsSchema,
@@ -69,6 +70,10 @@ export class SettingsService implements OnModuleInit {
     if (input.scoreMultiplier !== undefined) {
       const multiplier = assertPositiveInteger(input.scoreMultiplier, 'Score multiplier');
       await this.setValue(SETTINGS_KEYS.scoreMultiplier, String(multiplier));
+    }
+
+    if (input.uiLocale !== undefined) {
+      await this.setValue(SETTINGS_KEYS.uiLocale, assertUiLocale(input.uiLocale));
     }
 
     this.cache = null;

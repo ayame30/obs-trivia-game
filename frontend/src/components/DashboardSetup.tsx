@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Trans, useTranslation } from 'react-i18next';
 import { useMutation, useQuery } from '@apollo/client/react';
 import {
   FaTwitch,
@@ -36,7 +37,6 @@ import type {
 } from '../types';
 
 const OVERLAY_ACK_KEY = 'stream_trivia_overlay_ack';
-const DEFAULT_TEST_MESSAGE = 'Obs Trivia game chat test — if you see this, votes are ready!';
 
 interface DashboardSetupProps {
   round: Round | null;
@@ -64,12 +64,14 @@ export default function DashboardSetup({
   setScoreboard,
   onActionError,
 }: DashboardSetupProps) {
+  const { t } = useTranslation();
   const { accessToken, login, userId, loading: authLoading, logout } = useTwitchAuth();
   const [openStep, setOpenStep] = useState(1);
   const prevCompleteRef = useRef([false, false, false, false]);
   const initializedRef = useRef(false);
-  const [testMessage, setTestMessage] = useState(DEFAULT_TEST_MESSAGE);
+  const [testMessage, setTestMessage] = useState(() => t('setup.testMessageDefault'));
   const [testSent, setTestSent] = useState(false);
+  const defaultTestMessage = t('setup.testMessageDefault');
   const [overlayAcknowledged, acknowledgeOverlay] = useOverlayAcknowledged();
 
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
@@ -143,19 +145,29 @@ export default function DashboardSetup({
     prevCompleteRef.current = [...stepComplete];
   }, [stepComplete, authLoading, suggestedStep]);
 
+  useEffect(() => {
+    setTestMessage((prev) => {
+      const known = new Set([
+        defaultTestMessage,
+        'Obs Trivia game chat test — if you see this, votes are ready!',
+      ]);
+      return known.has(prev) || !prev.trim() ? defaultTestMessage : prev;
+    });
+  }, [defaultTestMessage]);
+
   const summaries = [
-    oauthComplete ? `Signed in as ${login}` : 'Connect your broadcaster account',
+    oauthComplete ? t('setup.summarySignedIn', { login }) : t('setup.summaryConnectAccount'),
     config?.hasToken
       ? config.chatConnected
         ? testSent
-          ? `Connected to #${config.channel}`
-          : 'Send a test message in chat'
-        : 'Waiting for IRC connection'
-      : 'Link token to the backend',
-    overlayComplete ? 'Overlay URLs saved' : 'Add browser sources in OBS',
+          ? t('setup.summaryConnectedChannel', { channel: config.channel })
+          : t('setup.summarySendTest')
+        : t('setup.summaryWaitingIrc')
+      : t('setup.summaryLinkToken'),
+    overlayComplete ? t('setup.summaryOverlaySaved') : t('setup.summaryAddOverlay'),
     questionsCount > 0
-      ? `${questionsCount} question${questionsCount === 1 ? '' : 's'} ready`
-      : 'Add questions to the bank',
+      ? t('setup.summaryQuestionsReady', { count: questionsCount })
+      : t('setup.summaryAddQuestions'),
   ];
 
   const saveToken = () => {
@@ -170,9 +182,7 @@ export default function DashboardSetup({
 
   const handleLogout = () => {
     if (
-      !window.confirm(
-        'Log out and remove the Twitch token from this browser and the server database?'
-      )
+      !window.confirm(t('setup.logoutConfirm'))
     ) {
       return;
     }
@@ -189,7 +199,7 @@ export default function DashboardSetup({
     try {
       await navigator.clipboard.writeText(url);
     } catch {
-      window.prompt('Copy this URL:', url);
+      window.prompt(t('setup.copyUrlPrompt'), url);
     }
   };
   const onClickAcknowledgeOverlay = () => {
@@ -204,7 +214,7 @@ export default function DashboardSetup({
     <div className="setup-wizard">
       <SetupStep
         step={1}
-        title="Twitch OAuth"
+        title={t("setup.stepOauth")}
         summary={summaries[0]}
         complete={oauthComplete}
         open={openStep === 1}
@@ -212,21 +222,20 @@ export default function DashboardSetup({
       >
         {!clientConfigured ? (
           <p className="setup-step__hint">
-            Set <code>VITE_TWITCH_CLIENT_ID</code> in <code>frontend/.env</code> (same value as backend{' '}
-            <code>TWITCH_CLIENT_ID</code>).
+            <Trans
+              i18nKey="setup.clientIdHint"
+              components={{ code: <code /> }}
+            />
           </p>
         ) : authLoading ? (
-          <p className="setup-step__hint">Validating Twitch token…</p>
+          <p className="setup-step__hint">{t('setup.validatingToken')}</p>
         ) : oauthComplete ? (
           <>
             <p>
-              Signed in as <strong>{login}</strong>
-              {userId ? ` (id: ${userId})` : null}
+              <Trans i18nKey="setup.signedInAs" values={{ login }} components={{ strong: <strong /> }} />
+              {userId ? t('setup.userIdSuffix', { userId }) : null}
             </p>
-            <p className="setup-step__hint">
-              Your OAuth token is stored in this browser. Continue to step 2 to connect chat on the
-              server.
-            </p>
+            <p className="setup-step__hint">{t('setup.oauthStoredHint')}</p>
             <div className="form-actions">
               <button
                 type="button"
@@ -235,20 +244,19 @@ export default function DashboardSetup({
                 onClick={handleLogout}
               >
                 <FaSignOutAlt aria-hidden />
-                {clearingToken ? 'Logging out…' : 'Log out & clear token'}
+                {clearingToken ? t('setup.loggingOut') : t('setup.logoutClear')}
               </button>
             </div>
           </>
         ) : (
           <>
             <p className="setup-step__hint">
-              Sign in with Twitch so the app can read chat votes and post round messages. Scopes:{' '}
-              <code>chat:read</code>, <code>chat:edit</code>.
+              <Trans i18nKey="setup.signInHint" components={{ code: <code /> }} />
             </p>
             {oauthUrl ? (
               <a className="setup-step__oauth-link" href={oauthUrl}>
                 <FaTwitch aria-hidden />
-                Connect with Twitch
+                {t('setup.connectTwitch')}
               </a>
             ) : null}
             {config?.hasToken ? (
@@ -260,7 +268,7 @@ export default function DashboardSetup({
                   onClick={handleLogout}
                 >
                   <FaSignOutAlt aria-hidden />
-                  {clearingToken ? 'Clearing…' : 'Clear server token'}
+                  {clearingToken ? t('setup.clearing') : t('setup.clearServerToken')}
                 </button>
               </div>
             ) : null}
@@ -270,38 +278,43 @@ export default function DashboardSetup({
 
       <SetupStep
         step={2}
-        title="Test chat connection"
+        title={t("setup.stepChat")}
         summary={summaries[1]}
         complete={chatComplete}
         open={openStep === 2}
         onToggle={() => setOpenStep(openStep === 2 ? 0 : 2)}
       >
         {!oauthComplete ? (
-          <p className="setup-step__hint">Complete step 1 first.</p>
+          <p className="setup-step__hint">{t('setup.completeStep1')}</p>
         ) : (
           <>
             {config?.hasToken ? (
               <p>
-                Server linked as <strong>{config.login}</strong> on channel{' '}
-                <strong>#{config.channel}</strong>
+                <Trans
+                  i18nKey="setup.serverLinked"
+                  values={{ login: config.login, channel: config.channel }}
+                  components={{ strong: <strong /> }}
+                />
                 {' · '}
                 <span
                   className={`status-pill${config.chatConnected ? ' live' : ''}`}
                   style={config.chatConnected ? undefined : { color: 'var(--muted)' }}
                 >
-                  {config.chatConnected ? 'IRC connected' : 'IRC disconnected'}
+                  {config.chatConnected ? t('setup.ircConnected') : t('setup.ircDisconnected')}
                 </span>
               </p>
             ) : (
-              <p className="setup-step__hint">
-                Save your OAuth token on the server so it can join Twitch IRC for A/B/C/D votes.
-              </p>
+              <p className="setup-step__hint">{t('setup.saveTokenHint')}</p>
             )}
 
             <div className="form-actions">
               <button type="button" onClick={saveToken} disabled={!accessToken || savingToken}>
                 <FaPlug aria-hidden />
-                {savingToken ? 'Saving…' : config?.hasToken ? 'Update token' : 'Connect chat on server'}
+                {savingToken
+                  ? t('common.saving')
+                  : config?.hasToken
+                    ? t('setup.updateToken')
+                    : t('setup.connectChat')}
               </button>
               {config?.hasToken ? (
                 <button
@@ -311,7 +324,7 @@ export default function DashboardSetup({
                   onClick={() => reconnect()}
                 >
                   <FaRedo aria-hidden />
-                  Reconnect IRC
+                  {t('setup.reconnectIrc')}
                 </button>
               ) : null}
               {(config?.hasToken || oauthComplete) && (
@@ -322,7 +335,7 @@ export default function DashboardSetup({
                   onClick={handleLogout}
                 >
                   <FaSignOutAlt aria-hidden />
-                  {clearingToken ? 'Logging out…' : 'Log out & clear token'}
+                  {clearingToken ? t('setup.loggingOut') : t('setup.logoutClear')}
                 </button>
               )}
             </div>
@@ -331,7 +344,9 @@ export default function DashboardSetup({
 
             {config?.hasToken ? (
               <div className="setup-step__test-chat">
-                <label htmlFor="test-chat-message">Send a test message to #{config.channel}</label>
+                <label htmlFor="test-chat-message">
+                  {t('setup.sendTestLabel', { channel: config.channel })}
+                </label>
                 <textarea
                   id="test-chat-message"
                   rows={2}
@@ -350,14 +365,12 @@ export default function DashboardSetup({
                     }
                   >
                     <FaPaperPlane aria-hidden />
-                    {sendingMessage ? 'Sending…' : 'Send test message'}
+                    {sendingMessage ? t('setup.sending') : t('setup.sendTestMessage')}
                   </button>
                 </div>
                 {sendError ? <p className="setup-step__error">{sendError.message}</p> : null}
                 {testSent ? (
-                  <p className="setup-step__success">
-                    Message sent — check your Twitch chat to confirm it appears.
-                  </p>
+                  <p className="setup-step__success">{t('setup.testSentSuccess')}</p>
                 ) : null}
               </div>
             ) : null}
@@ -367,44 +380,42 @@ export default function DashboardSetup({
 
       <SetupStep
         step={3}
-        title="Add overlay to OBS / Streamlabs"
+        title={t("setup.stepOverlay")}
         summary={summaries[2]}
         complete={overlayComplete}
         open={openStep === 3}
         onToggle={() => setOpenStep(openStep === 3 ? 0 : 3)}
       >
         <p className="setup-step__hint">
-          Add each URL as a <strong>Browser Source</strong> in OBS or Streamlabs. Set width ~900,
-          height ~600, and enable transparent background if your scene needs it.
+          <Trans i18nKey="setup.overlayHint1" components={{ strong: <strong /> }} />
         </p>
         <p className="setup-step__hint">
-          If an overlay looks blank or stuck, right-click the Browser Source in OBS →{' '}
-          <strong>Refresh</strong> (or toggle visibility) after this app is running.
+          <Trans i18nKey="setup.overlayHint2" components={{ strong: <strong /> }} />
         </p>
 
         <div className="setup-step__url-block">
-          <label>Live trivia overlay</label>
+          <label>{t('setup.liveOverlay')}</label>
           <div className="setup-step__url-row">
             <input type="text" readOnly value={overlayUrl} />
             <button type="button" className="secondary" onClick={() => copyUrl(overlayUrl)}>
               <FaCopy aria-hidden />
-              Copy
+              {t('common.copy')}
             </button>
             <a href="/overlay/questions" target="_blank" rel="noreferrer" className="setup-step__preview-link">
               <FaExternalLinkAlt aria-hidden />
-              Preview
+              {t('common.preview')}
             </a>
           </div>
-          <p className="setup-step__hint">Shows the active question, options, countdown, and votes.</p>
+          <p className="setup-step__hint">{t('setup.liveOverlayHint')}</p>
         </div>
 
         <div className="setup-step__url-block">
-          <label>Scoreboard overlay</label>
+          <label>{t('setup.scoreboardOverlay')}</label>
           <div className="setup-step__url-row">
             <input type="text" readOnly value={scoreboardOverlayUrl} />
             <button type="button" className="secondary" onClick={() => copyUrl(scoreboardOverlayUrl)}>
               <FaCopy aria-hidden />
-              Copy
+              {t('common.copy')}
             </button>
             <a
               href="/overlay/scoreboard"
@@ -413,23 +424,23 @@ export default function DashboardSetup({
               className="setup-step__preview-link"
             >
               <FaExternalLinkAlt aria-hidden />
-              Preview
+              {t('common.preview')}
             </a>
           </div>
-          <p className="setup-step__hint">Shows the top scores during your stream.</p>
+          <p className="setup-step__hint">{t('setup.scoreboardOverlayHint')}</p>
         </div>
 
         <div className="form-actions">
           <button type="button" onClick={onClickAcknowledgeOverlay}>
             <FaCheck aria-hidden />
-            Done
+            {t('common.done')}
           </button>
         </div>
       </SetupStep>
 
       <SetupStep
         step={4}
-        title="Prepare questions & start the stream"
+        title={t("setup.stepStream")}
         summary={summaries[3]}
         complete={questionsCount > 0}
         open={openStep === 4}
@@ -439,23 +450,21 @@ export default function DashboardSetup({
           <div className="setup-step__stream-main">
             <div className="card setup-step__live-card">
               <div className="setup-step__live-header">
-                <h3>Live round preview</h3>
+                <h3>{t('setup.liveRoundPreview')}</h3>
                 <button
                   type="button"
                   className="secondary"
                   disabled={resettingRounds}
                   onClick={() => {
                     if (
-                      window.confirm(
-                        'Reset round #? This clears all round history and votes. The next round will start at #1. Active rounds are cancelled without scoring.'
-                      )
+                      window.confirm(t('setup.resetRoundConfirm'))
                     ) {
                       resetRounds();
                     }
                   }}
                 >
                   <FaSyncAlt aria-hidden />
-                  Reset round #
+                  {t('setup.resetRound')}
                 </button>
               </div>
               <LiveRoundPanel round={round} showCorrect={showCorrect} />

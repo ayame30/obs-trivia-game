@@ -1,4 +1,5 @@
 import { memo, useEffect, useState, type KeyboardEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Form, Formik } from 'formik';
 import { useQuery, useMutation } from '@apollo/client/react';
 import {
@@ -102,6 +103,7 @@ const QuestionFormModal = memo(function QuestionFormModal({
   onClose: () => void;
   onSubmit: (values: QuestionFormState) => void;
 }) {
+  const { t } = useTranslation();
   const optionKeys = ['optionA', 'optionB', 'optionC', 'optionD'] as const;
 
   return (
@@ -119,8 +121,10 @@ const QuestionFormModal = memo(function QuestionFormModal({
           onClick={(e) => e.stopPropagation()}
         >
           <div className="modal__header">
-            <h3 id="question-form-title">{editingId ? 'Edit question' : 'New question'}</h3>
-            <button type="button" className="modal__close secondary" onClick={onClose} aria-label="Close">
+            <h3 id="question-form-title">
+              {editingId ? t('questions.editTitle') : t('questions.createTitle')}
+            </h3>
+            <button type="button" className="modal__close secondary" onClick={onClose} aria-label={t('questions.close')}>
               <FaTimes aria-hidden />
             </button>
           </div>
@@ -128,7 +132,7 @@ const QuestionFormModal = memo(function QuestionFormModal({
           <div className="form-grid modal__body">
             <FormTextArea
               name="text"
-              label="Question"
+              label={t('questions.question')}
               rows={MAX_TEXT_ROWS}
               className="question-field--2-rows"
               required
@@ -141,7 +145,7 @@ const QuestionFormModal = memo(function QuestionFormModal({
                 <FormTextArea
                   key={key}
                   name={key}
-                  label={`Option ${String.fromCharCode(65 + i)}`}
+                  label={t('questions.option', { letter: String.fromCharCode(65 + i) })}
                   rows={MAX_TEXT_ROWS}
                   className="question-field--2-rows"
                   required
@@ -153,12 +157,12 @@ const QuestionFormModal = memo(function QuestionFormModal({
             <div className="grid-2">
               <FormSelect
                 name="correctAnswer"
-                label="Correct answer"
+                label={t('questions.correctAnswer')}
                 options={ANSWER_OPTIONS}
               />
               <FormTextInput
                 name="countdownSeconds"
-                label="Countdown (seconds)"
+                label={t('questions.countdownSeconds')}
                 type="number"
                 min={5}
                 max={600}
@@ -170,11 +174,15 @@ const QuestionFormModal = memo(function QuestionFormModal({
           <div className="modal__footer form-actions">
             <button type="submit" disabled={creating || updating}>
               {editingId ? <FaSave aria-hidden /> : <FaPlus aria-hidden />}
-              {creating || updating ? 'Saving…' : editingId ? 'Save changes' : 'Add question'}
+              {creating || updating
+                ? t('common.saving')
+                : editingId
+                  ? t('questions.saveChanges')
+                  : t('questions.add')}
             </button>
             <button type="button" className="secondary" onClick={onClose}>
               <FaTimes aria-hidden />
-              Cancel
+              {t('questions.cancel')}
             </button>
           </div>
         </Form>
@@ -199,6 +207,7 @@ export default function QuestionManager({
   const [draft, setDraft] = useState<QuestionFormState>(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
+  const { t } = useTranslation();
   const [offset, setOffset] = useState(0);
   const [mode, setMode] = useState<BankMode>('edit');
 
@@ -333,16 +342,16 @@ export default function QuestionManager({
   const content = (
     <>
       <div className="setup-step__live-header question-manager__header">
-        <h2>Question bank</h2>
+        <h2>{t('questions.bank')}</h2>
         <div className="question-manager__header-actions">
-          <div className="bank-mode-toggle" role="group" aria-label="Question bank mode">
+          <div className="bank-mode-toggle" role="group" aria-label={t('questions.bankMode')}>
             <button
               type="button"
               className={`bank-mode-toggle__edit${isEditMode ? ' is-active' : ''}`}
               aria-pressed={isEditMode}
               onClick={() => setBankMode('edit')}
             >
-              Edit Mode
+              {t('questions.editMode')}
             </button>
             <button
               type="button"
@@ -350,20 +359,20 @@ export default function QuestionManager({
               aria-pressed={isStreamMode}
               onClick={() => setBankMode('stream')}
             >
-              Stream Mode
+              {t('questions.streamMode')}
             </button>
           </div>
         </div>
       </div>
 
       {loading ? (
-        <p className="setup-step__hint">Loading questions…</p>
+        <p className="setup-step__hint">{t('questions.loading')}</p>
       ) : (
         <>
           {total > 0 ? (
             <div className="pagination">
               <span className="pagination__meta">
-                {pageStart}–{pageEnd} of {total}
+                {t('questions.pagination', { start: pageStart, end: pageEnd, total })}
               </span>
               <div className="pagination__controls">
                 <button
@@ -390,7 +399,7 @@ export default function QuestionManager({
             <div className="question-manager__toolbar">
               <button type="button" className="question-manager__add" onClick={openCreate}>
                 <FaPlus aria-hidden />
-                Add question
+                {t('questions.add')}
               </button>
             </div>
           ) : null}
@@ -398,20 +407,18 @@ export default function QuestionManager({
           <table className="question-table">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Question</th>
-                <th>Ans</th>
-                <th>Timer</th>
-                <th>Actions</th>
+                <th>{t('questions.colId')}</th>
+                <th>{t('questions.colQuestion')}</th>
+                <th>{t('questions.colAns')}</th>
+                <th>{t('questions.colTimer')}</th>
+                <th>{t('questions.colActions')}</th>
               </tr>
             </thead>
             <tbody>
               {questions.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="question-table__empty">
-                    {isEditMode
-                      ? 'No questions yet. Add one to get started.'
-                      : 'No questions yet. Switch to Edit mode to add some.'}
+                    {isEditMode ? t('questions.emptyEdit') : t('questions.emptyStream')}
                   </td>
                 </tr>
               ) : (
@@ -436,8 +443,8 @@ export default function QuestionManager({
                                   <button
                                     type="button"
                                     className="question-table__btn question-table__btn--start"
-                                    aria-label="Resume"
-                                    title="Resume"
+                                    aria-label={t("questions.resume")}
+                                    title={t("questions.resume")}
                                     disabled={resuming}
                                     onClick={() => resumeCountdown()}
                                   >
@@ -447,8 +454,8 @@ export default function QuestionManager({
                                   <button
                                     type="button"
                                     className="question-table__btn question-table__btn--pause"
-                                    aria-label="Pause"
-                                    title="Pause"
+                                    aria-label={t("questions.pause")}
+                                    title={t("questions.pause")}
                                     disabled={pausing}
                                     onClick={() => pauseCountdown()}
                                   >
@@ -462,15 +469,15 @@ export default function QuestionManager({
                                   onClick={() => stopQuestion()}
                                 >
                                   <FaEye aria-hidden />
-                                  Reveal answer
+                                  {t('questions.reveal')}
                                 </button>
                               </>
                             ) : (
                               <button
                                 type="button"
                                 className="question-table__btn question-table__btn--start"
-                                aria-label="Start"
-                                title="Start"
+                                aria-label={t("questions.start")}
+                                title={t("questions.start")}
                                 disabled={hasActive || starting}
                                 onClick={() => startQuestion({ variables: { questionId: q.id } })}
                               >
@@ -482,8 +489,8 @@ export default function QuestionManager({
                               <button
                                 type="button"
                                 className="question-table__btn question-table__btn--edit"
-                                aria-label="Edit"
-                                title="Edit"
+                                aria-label={t("questions.edit")}
+                                title={t("questions.edit")}
                                 onClick={() => startEdit(q)}
                               >
                                 <FaEdit aria-hidden />
@@ -491,8 +498,8 @@ export default function QuestionManager({
                               <button
                                 type="button"
                                 className="question-table__btn"
-                                aria-label="Copy"
-                                title="Copy"
+                                aria-label={t("questions.copy")}
+                                title={t("questions.copy")}
                                 onClick={() => startCopy(q)}
                               >
                                 <FaCopy aria-hidden />
@@ -500,16 +507,16 @@ export default function QuestionManager({
                               <button
                                 type="button"
                                 className="question-table__btn question-table__btn--danger"
-                                aria-label="Delete"
+                                aria-label={t("questions.delete")}
                                 title={
                                   isActiveQuestion
-                                    ? 'Cannot delete the active question'
-                                    : 'Delete'
+                                    ? t('questions.cannotDeleteActive')
+                                    : t('questions.delete')
                                 }
                                 disabled={isActiveQuestion}
                                 onClick={() => {
                                   if (isActiveQuestion) return;
-                                  if (window.confirm('Delete this question?')) {
+                                  if (window.confirm(t('questions.deleteConfirm'))) {
                                     deleteQuestion({ variables: { id: q.id } });
                                   }
                                 }}
@@ -535,8 +542,8 @@ export default function QuestionManager({
             <button
               type="button"
               className="question-table__btn question-table__btn--start"
-              aria-label="Resume"
-              title="Resume"
+              aria-label={t("questions.resume")}
+              title={t("questions.resume")}
               disabled={resuming}
               onClick={() => resumeCountdown()}
             >
@@ -546,13 +553,13 @@ export default function QuestionManager({
             <button
               type="button"
               className="question-table__btn question-table__btn--pause"
-              aria-label="Pause"
-              title="Pause"
+              aria-label={t("questions.pause")}
+              title={t("questions.pause")}
               disabled={pausing}
               onClick={() => pauseCountdown()}
             >
               <FaPause aria-hidden />
-              Pause
+              {t('questions.pause')}
             </button>
           )}
           <button
@@ -562,7 +569,7 @@ export default function QuestionManager({
             onClick={() => stopQuestion()}
           >
             <FaEye aria-hidden />
-            Reveal answer
+            {t('questions.reveal')}
           </button>
         </div>
       ) : null}
