@@ -1,83 +1,28 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
-import {
-  AppSettings,
-  DEFAULT_CUTOFF_CHAT_MESSAGE,
-  DEFAULT_QUESTION_CHAT_TEMPLATE,
-  DEFAULT_SCORE_MULTIPLIER,
-  SETTINGS_DEFAULTS,
-  SETTINGS_KEYS,
-  type SettingKey,
-} from '../entities/app-settings.entity';
+import { AppSettings } from '../entities/app-settings.entity';
 import {
   BOOLEAN_FIELDS,
+  DEFAULT_QUESTION_CHAT_TEMPLATE,
+  LEGACY_QUESTION_CHAT_TEMPLATE,
   REQUIRED_STRING_FIELDS,
-  type AppSettingsValues,
-  type UpdateAppSettingsInput,
-} from './settings.types';
+  SETTINGS_DEFAULTS,
+  SETTINGS_KEYS,
+  WIDE_TABLE_MIGRATION_FIELDS,
+  type SettingKey,
+} from './settings.constants';
+import type { AppSettingsValues, UpdateAppSettingsInput } from './settings.types';
+import {
+  assertPositiveInteger,
+  buildAppSettingsValues,
+  isKeyValueSettingsSchema,
+  isLegacyWideSettingsSchema,
+  latestUpdatedAt,
+  migrateWideFieldValue,
+} from './settings.utils';
 
 export type { AppSettingsValues, UpdateAppSettingsInput } from './settings.types';
-
-function parseScoreMultiplier(raw: string): number {
-  const value = Number(raw);
-  return Number.isInteger(value) && value > 0 ? value : DEFAULT_SCORE_MULTIPLIER;
-}
-
-function latestUpdatedAt(rows: Array<{ updatedAt?: Date | string | null }>): string {
-  let latest: string | null = null;
-  for (const row of rows) {
-    const at = String(row.updatedAt ?? '');
-    if (!latest || at > latest) latest = at;
-  }
-  return latest || new Date().toISOString();
-}
-
-function asBoolString(value: unknown): string {
-  return value === 0 || value === false || value === '0' ? 'false' : 'true';
-}
-
-function isKeyValueSettingsSchema(columns: Set<string>): boolean {
-  return columns.has('key') && columns.has('value') && !columns.has('show_question_chat');
-}
-
-function isLegacyWideSettingsSchema(columns: Set<string>): boolean {
-  return columns.has('show_question_chat');
-}
-
-type WideMigrationField = {
-  column: string;
-  settingKey: SettingKey;
-  toValue: (raw: unknown) => string;
-};
-
-const WIDE_TABLE_MIGRATION_FIELDS: WideMigrationField[] = [
-  {
-    column: 'show_question_chat',
-    settingKey: SETTINGS_KEYS.showQuestionChat,
-    toValue: asBoolString,
-  },
-  {
-    column: 'question_chat_template',
-    settingKey: SETTINGS_KEYS.questionChatTemplate,
-    toValue: (raw) => String(raw ?? DEFAULT_QUESTION_CHAT_TEMPLATE),
-  },
-  {
-    column: 'show_cutoff_chat',
-    settingKey: SETTINGS_KEYS.showCutoffChat,
-    toValue: asBoolString,
-  },
-  {
-    column: 'cutoff_chat_message',
-    settingKey: SETTINGS_KEYS.cutoffChatMessage,
-    toValue: (raw) => String(raw ?? DEFAULT_CUTOFF_CHAT_MESSAGE),
-  },
-  {
-    column: 'score_multiplier',
-    settingKey: SETTINGS_KEYS.scoreMultiplier,
-    toValue: (raw) => String(raw ?? DEFAULT_SCORE_MULTIPLIER),
-  },
-];
 
 @Injectable()
 export class SettingsService implements OnModuleInit {
@@ -122,10 +67,7 @@ export class SettingsService implements OnModuleInit {
     }
 
     if (input.scoreMultiplier !== undefined) {
-      const multiplier = Number(input.scoreMultiplier);
-      if (!Number.isFinite(multiplier) || !Number.isInteger(multiplier) || multiplier <= 0) {
-        throw new Error('Score multiplier must be a positive integer');
-      }
+      const multiplier = assertPositiveInteger(input.scoreMultiplier, 'Score multiplier');
       await this.setValue(SETTINGS_KEYS.scoreMultiplier, String(multiplier));
     }
 
@@ -141,17 +83,10 @@ export class SettingsService implements OnModuleInit {
       }
     }
 
-    const previousDefault = [
-      'Q{{round}}: {{question}}',
-      'A ) {{answerA}}',
-      'B ) {{answerB}}',
-      'C ) {{answerC}}',
-      'D ) {{answerD}}',
-    ].join('\n');
     const templateRow = await this.settingsRepo.findOne({
       where: { key: SETTINGS_KEYS.questionChatTemplate },
     });
-    if (templateRow?.value === previousDefault) {
+    if (templateRow?.value === LEGACY_QUESTION_CHAT_TEMPLATE) {
       templateRow.value = DEFAULT_QUESTION_CHAT_TEMPLATE;
       await this.settingsRepo.save(templateRow);
     }
@@ -165,24 +100,7 @@ export class SettingsService implements OnModuleInit {
     const get = (key: SettingKey): string =>
       map.get(key)?.value ?? SETTINGS_DEFAULTS[key];
 
-    const booleans = Object.fromEntries(
-      BOOLEAN_FIELDS.map((field) => [field.inputKey, get(field.settingKey) !== 'false'])
-    ) as Pick<AppSettingsValues, (typeof BOOLEAN_FIELDS)[number]['inputKey']>;
-
-    const strings = Object.fromEntries(
-      REQUIRED_STRING_FIELDS.map((field) => [
-        field.inputKey,
-        get(field.settingKey) || SETTINGS_DEFAULTS[field.settingKey],
-      ])
-    ) as Pick<AppSettingsValues, (typeof REQUIRED_STRING_FIELDS)[number]['inputKey']>;
-
-    const values: AppSettingsValues = {
-      ...booleans,
-      ...strings,
-      scoreMultiplier: parseScoreMultiplier(get(SETTINGS_KEYS.scoreMultiplier)),
-      overlayCustomCss: get(SETTINGS_KEYS.overlayCustomCss) ?? '',
-      updatedAt: latestUpdatedAt(rows),
-    };
+    const values = buildAppSettingsValues(get, latestUpdatedAt(rows));
     this.cache = values;
     return values;
   }
@@ -223,7 +141,7 @@ export class SettingsService implements OnModuleInit {
     if (!old) return;
 
     for (const field of WIDE_TABLE_MIGRATION_FIELDS) {
-      await this.setValue(field.settingKey, field.toValue(old[field.column]));
+      await this.setValue(field.settingKey, migrateWideFieldValue(field, old[field.column]));
     }
   }
 }

@@ -1,4 +1,4 @@
-import { SETTINGS_KEYS, type SettingKey } from '../entities/app-settings.entity';
+import type { SettingKey } from './settings.constants';
 
 export interface AppSettingsValues {
   showQuestionChat: boolean;
@@ -54,50 +54,15 @@ export type BooleanField = {
   settingKey: SettingKey;
 };
 
-export const REQUIRED_STRING_FIELDS: RequiredStringField[] = [
-  {
-    inputKey: 'questionChatTemplate',
-    settingKey: SETTINGS_KEYS.questionChatTemplate,
-    label: 'Question chat template',
-  },
-  {
-    inputKey: 'cutoffChatMessage',
-    settingKey: SETTINGS_KEYS.cutoffChatMessage,
-    label: 'Cutoff chat message',
-  },
-  {
-    inputKey: 'roundLabelTemplate',
-    settingKey: SETTINGS_KEYS.roundLabelTemplate,
-    label: 'Round label template',
-  },
-  {
-    inputKey: 'roundLabelIdle',
-    settingKey: SETTINGS_KEYS.roundLabelIdle,
-    label: 'Idle round label',
-  },
-  {
-    inputKey: 'idleQuestionText',
-    settingKey: SETTINGS_KEYS.idleQuestionText,
-    label: 'Idle question text',
-  },
-  {
-    inputKey: 'countdownLabel',
-    settingKey: SETTINGS_KEYS.countdownLabel,
-    label: 'Countdown label',
-  },
-  {
-    inputKey: 'countdownPausedLabel',
-    settingKey: SETTINGS_KEYS.countdownPausedLabel,
-    label: 'Paused countdown label',
-  },
-  {
-    inputKey: 'countdownValueTemplate',
-    settingKey: SETTINGS_KEYS.countdownValueTemplate,
-    label: 'Countdown value template',
-  },
-];
-
-export const BOOLEAN_FIELDS: BooleanField[] = [
-  { inputKey: 'showQuestionChat', settingKey: SETTINGS_KEYS.showQuestionChat },
-  { inputKey: 'showCutoffChat', settingKey: SETTINGS_KEYS.showCutoffChat },
-];
+export type WideMigrationField =
+  | {
+      column: string;
+      settingKey: SettingKey;
+      kind: 'bool';
+    }
+  | {
+      column: string;
+      settingKey: SettingKey;
+      kind: 'string';
+      fallback: string;
+    };
