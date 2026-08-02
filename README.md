@@ -4,9 +4,10 @@ Twitch chat trivia with live OBS overlays (ABCD votes, scoreboard, countdown).
 
 ## Contents
 
-1. [For streamers (no coding)](#for-streamers-no-coding)
-2. [Screenshots](#screenshots)
-3. [For developers](#for-developers)
+1. [Features](#features)
+2. [For streamers (no coding)](#for-streamers-no-coding)
+3. [Screenshots](#screenshots)
+4. [For developers](#for-developers)
    - [Requirements](#requirements)
    - [Setup](#setup)
    - [Run API only](#run-api-only)
@@ -15,18 +16,46 @@ Twitch chat trivia with live OBS overlays (ABCD votes, scoreboard, countdown).
    - [Overlay CSS + MCP](#overlay-css-file-split--mcp)
    - [Electron desktop app](#electron-desktop-app)
    - [GitHub Releases](#github-releases)
-4. [Twitch chat votes](#twitch-chat-votes)
-5. [GraphQL (developers)](#graphql-developers)
+5. [Twitch chat votes](#twitch-chat-votes)
+6. [GraphQL (developers)](#graphql-developers)
    - [Questions](#questions)
    - [Live round](#live-round)
    - [Subscriptions](#subscriptions)
-6. [License](#license)
+7. [License](#license)
+
+---
+
+## Features
+
+### Control panel
+- Windows desktop app (Electron installer) or browser UI at `localhost:4000`
+- Guided setup: Twitch sign-in → chat link → OBS overlay URLs → question bank
+- Question bank with create / edit / copy / delete, pagination, and per-question timers
+- **Edit mode** for managing questions; **Stream mode** to start, pause, resume, and reveal answers
+- Live round preview that mirrors the OBS trivia overlay
+- Scoreboard with manual edits, typed reset confirmation, and round counter reset
+
+### OBS overlays
+- Transparent browser sources for trivia and scoreboard
+- Live vote counts, countdown, auto-fitting question/answer text, answer highlight on reveal answers
+- Top-10 scoreboard with animated ranks (score × configurable multiplier, default * 10)
+- Custom overlay CSS from **Settings** (hot-applies to both overlays)
+
+### Twitch chat
+- Viewers vote with `A` / `B` / `C` / `D` — only the first answer per user counts
+- Optional templated question post and end-of-timer cutoff message in chat, to ensure clear voting windows even with short timers or if there's streaming/chat delay.
+- Correct voters score when you reveal; reconnect / test-message tools in setup
+
+### Extras
+- Settings for chat templates, score multiplier, and overlay CSS
+- MCP endpoint for AI-assisted overlay CSS and question CRUD
+- GitHub Releases with a prebuilt Windows `.exe`
 
 ---
 
 ## For streamers (no coding)
 
-1. Download the Windows installer (`ObsTriviaGame-*-x64.exe`).
+1. Download the Windows installer (`ObsTriviaGame-*-x64.exe`) from the [Releases page](https://github.com/ayame30/abs-trivia-game/releases).
 2. Install / double-click to open **Obs Trivia game**.
 3. Sign in with Twitch in the app and finish the setup steps.
 4. In OBS or Streamlabs, add **Browser Sources**:
@@ -121,10 +150,6 @@ npm run dist:win
 ```
 
 `dist:win` packs Nest + production `node_modules` into `electron-resources/server` (pruned), keeps only the `en-US` Electron locale, then builds an NSIS installer. Expect roughly **~90–110 MB** for the `.exe` — most of that is Chromium inside Electron; the Nest server payload is trimmed separately.
-
-## Twitch chat votes
-
-Viewers vote by sending **A**, **B**, **C**, or **D** (or `!A`, etc.) — one vote per user per round.
 
 ## GraphQL (developers)
 
