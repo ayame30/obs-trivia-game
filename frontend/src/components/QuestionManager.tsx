@@ -1,4 +1,5 @@
-import { useEffect, useState, type FormEvent, type KeyboardEvent } from 'react';
+import { memo, useEffect, useState, type KeyboardEvent } from 'react';
+import { Form, Formik } from 'formik';
 import { useQuery, useMutation } from '@apollo/client/react';
 import {
   FaPlus,
@@ -13,6 +14,7 @@ import {
   FaChevronRight,
   FaCopy,
 } from 'react-icons/fa';
+import { FormSelect, FormTextArea, FormTextInput } from './form';
 import {
   GET_QUESTIONS,
   CREATE_QUESTION,
@@ -47,6 +49,12 @@ const emptyForm: QuestionFormState = {
 
 const PAGE_SIZE = 10;
 const MAX_TEXT_ROWS = 2;
+const ANSWER_OPTIONS = [
+  { value: 'A', label: 'A' },
+  { value: 'B', label: 'B' },
+  { value: 'C', label: 'C' },
+  { value: 'D', label: 'D' },
+];
 
 type BankMode = 'edit' | 'stream';
 
@@ -67,6 +75,114 @@ function blockExtraRows(e: KeyboardEvent<HTMLTextAreaElement>, value: string): v
   }
 }
 
+function questionToForm(q: Question): QuestionFormState {
+  return {
+    text: limitLines(q.text),
+    optionA: limitLines(q.optionA),
+    optionB: limitLines(q.optionB),
+    optionC: limitLines(q.optionC),
+    optionD: limitLines(q.optionD),
+    correctAnswer: q.correctAnswer || 'A',
+    countdownSeconds: q.countdownSeconds ?? 30,
+  };
+}
+
+const QuestionFormModal = memo(function QuestionFormModal({
+  editingId,
+  initialValues,
+  creating,
+  updating,
+  onClose,
+  onSubmit,
+}: {
+  editingId: string | null;
+  initialValues: QuestionFormState;
+  creating: boolean;
+  updating: boolean;
+  onClose: () => void;
+  onSubmit: (values: QuestionFormState) => void;
+}) {
+  const optionKeys = ['optionA', 'optionB', 'optionC', 'optionD'] as const;
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <Formik<QuestionFormState>
+        initialValues={initialValues}
+        enableReinitialize
+        onSubmit={onSubmit}
+      >
+        <Form
+          className="modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="question-form-title"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="modal__header">
+            <h3 id="question-form-title">{editingId ? 'Edit question' : 'New question'}</h3>
+            <button type="button" className="modal__close secondary" onClick={onClose} aria-label="Close">
+              <FaTimes aria-hidden />
+            </button>
+          </div>
+
+          <div className="form-grid modal__body">
+            <FormTextArea
+              name="text"
+              label="Question"
+              rows={MAX_TEXT_ROWS}
+              className="question-field--2-rows"
+              required
+              autoFocus
+              transformValue={limitLines}
+              onKeyDown={blockExtraRows}
+            />
+            <div className="grid-2">
+              {optionKeys.map((key, i) => (
+                <FormTextArea
+                  key={key}
+                  name={key}
+                  label={`Option ${String.fromCharCode(65 + i)}`}
+                  rows={MAX_TEXT_ROWS}
+                  className="question-field--2-rows"
+                  required
+                  transformValue={limitLines}
+                  onKeyDown={blockExtraRows}
+                />
+              ))}
+            </div>
+            <div className="grid-2">
+              <FormSelect
+                name="correctAnswer"
+                label="Correct answer"
+                options={ANSWER_OPTIONS}
+              />
+              <FormTextInput
+                name="countdownSeconds"
+                label="Countdown (seconds)"
+                type="number"
+                min={5}
+                max={600}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="modal__footer form-actions">
+            <button type="submit" disabled={creating || updating}>
+              {editingId ? <FaSave aria-hidden /> : <FaPlus aria-hidden />}
+              {creating || updating ? 'Saving…' : editingId ? 'Save changes' : 'Add question'}
+            </button>
+            <button type="button" className="secondary" onClick={onClose}>
+              <FaTimes aria-hidden />
+              Cancel
+            </button>
+          </div>
+        </Form>
+      </Formik>
+    </div>
+  );
+});
+
 interface QuestionManagerProps {
   activeRound: Round | null | undefined;
   onRoundChange?: (round: Round | null) => void;
@@ -80,7 +196,7 @@ export default function QuestionManager({
   onActionError,
   embedded,
 }: QuestionManagerProps) {
-  const [form, setForm] = useState<QuestionFormState>(emptyForm);
+  const [draft, setDraft] = useState<QuestionFormState>(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [offset, setOffset] = useState(0);
@@ -92,7 +208,7 @@ export default function QuestionManager({
   const closeForm = () => {
     setFormOpen(false);
     setEditingId(null);
-    setForm(emptyForm);
+    setDraft(emptyForm);
   };
 
   const setBankMode = (next: BankMode) => {
@@ -176,59 +292,40 @@ export default function QuestionManager({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [formOpen]);
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
+  const submitQuestion = (values: QuestionFormState) => {
     const input = {
-      text: limitLines(form.text).trim(),
-      optionA: limitLines(form.optionA).trim(),
-      optionB: limitLines(form.optionB).trim(),
-      optionC: limitLines(form.optionC).trim(),
-      optionD: limitLines(form.optionD).trim(),
-      correctAnswer: form.correctAnswer,
-      countdownSeconds: Number(form.countdownSeconds) || 30,
+      text: limitLines(values.text).trim(),
+      optionA: limitLines(values.optionA).trim(),
+      optionB: limitLines(values.optionB).trim(),
+      optionC: limitLines(values.optionC).trim(),
+      optionD: limitLines(values.optionD).trim(),
+      correctAnswer: values.correctAnswer as AnswerChoice,
+      countdownSeconds: Number(values.countdownSeconds) || 30,
     };
     if (editingId) {
-      updateQuestion({ variables: { id: editingId, input } });
+      void updateQuestion({ variables: { id: editingId, input } });
     } else {
-      createQuestion({ variables: { input } });
+      void createQuestion({ variables: { input } });
     }
   };
 
   const openCreate = () => {
     setEditingId(null);
-    setForm(emptyForm);
+    setDraft(emptyForm);
     setFormOpen(true);
   };
 
   const startEdit = (q: Question) => {
     setEditingId(q.id);
-    setForm({
-      text: limitLines(q.text),
-      optionA: limitLines(q.optionA),
-      optionB: limitLines(q.optionB),
-      optionC: limitLines(q.optionC),
-      optionD: limitLines(q.optionD),
-      correctAnswer: q.correctAnswer || 'A',
-      countdownSeconds: q.countdownSeconds ?? 30,
-    });
+    setDraft(questionToForm(q));
     setFormOpen(true);
   };
 
   const startCopy = (q: Question) => {
     setEditingId(null);
-    setForm({
-      text: limitLines(q.text),
-      optionA: limitLines(q.optionA),
-      optionB: limitLines(q.optionB),
-      optionC: limitLines(q.optionC),
-      optionD: limitLines(q.optionD),
-      correctAnswer: q.correctAnswer || 'A',
-      countdownSeconds: q.countdownSeconds ?? 30,
-    });
+    setDraft(questionToForm(q));
     setFormOpen(true);
   };
-
-  const optionKeys = ['optionA', 'optionB', 'optionC', 'optionD'] as const;
 
   const isEditMode = mode === 'edit';
   const isStreamMode = mode === 'stream';
@@ -471,91 +568,15 @@ export default function QuestionManager({
       ) : null}
 
       {formOpen && isEditMode ? (
-        <div className="modal-overlay" onClick={closeForm}>
-            <form
-              className="modal"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="question-form-title"
-              onClick={(e) => e.stopPropagation()}
-              onSubmit={handleSubmit}
-            >
-              <div className="modal__header">
-                <h3 id="question-form-title">{editingId ? 'Edit question' : 'New question'}</h3>
-                <button type="button" className="modal__close secondary" onClick={closeForm} aria-label="Close">
-                  <FaTimes aria-hidden />
-                </button>
-              </div>
-
-              <div className="form-grid modal__body">
-                <div>
-                  <label>Question</label>
-                  <textarea
-                    rows={MAX_TEXT_ROWS}
-                    className="question-field--2-rows"
-                    value={form.text}
-                    onChange={(e) => setForm({ ...form, text: limitLines(e.target.value) })}
-                    onKeyDown={(e) => blockExtraRows(e, form.text)}
-                    required
-                    autoFocus
-                  />
-                </div>
-                <div className="grid-2">
-                  {optionKeys.map((key, i) => (
-                    <div key={key}>
-                      <label>Option {String.fromCharCode(65 + i)}</label>
-                      <textarea
-                        rows={MAX_TEXT_ROWS}
-                        className="question-field--2-rows"
-                        value={form[key]}
-                        onChange={(e) => setForm({ ...form, [key]: limitLines(e.target.value) })}
-                        onKeyDown={(e) => blockExtraRows(e, form[key])}
-                        required
-                      />
-                    </div>
-                  ))}
-                </div>
-                <div className="grid-2">
-                  <div>
-                    <label>Correct answer</label>
-                    <select
-                      value={form.correctAnswer}
-                      onChange={(e) =>
-                        setForm({ ...form, correctAnswer: e.target.value as AnswerChoice })
-                      }
-                    >
-                      <option value="A">A</option>
-                      <option value="B">B</option>
-                      <option value="C">C</option>
-                      <option value="D">D</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label>Countdown (seconds)</label>
-                    <input
-                      type="number"
-                      min={5}
-                      max={600}
-                      value={form.countdownSeconds}
-                      onChange={(e) => setForm({ ...form, countdownSeconds: e.target.value })}
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="modal__footer form-actions">
-                <button type="submit" disabled={creating || updating}>
-                  {editingId ? <FaSave aria-hidden /> : <FaPlus aria-hidden />}
-                  {creating || updating ? 'Saving…' : editingId ? 'Save changes' : 'Add question'}
-                </button>
-                <button type="button" className="secondary" onClick={closeForm}>
-                  <FaTimes aria-hidden />
-                  Cancel
-                </button>
-              </div>
-            </form>
-        </div>
+        <QuestionFormModal
+          key={editingId ?? 'new'}
+          editingId={editingId}
+          initialValues={draft}
+          creating={creating}
+          updating={updating}
+          onClose={closeForm}
+          onSubmit={submitQuestion}
+        />
       ) : null}
     </>
   );

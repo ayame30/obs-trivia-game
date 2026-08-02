@@ -177,7 +177,14 @@ label {
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--muted);
+  margin-top: 0.75rem;
   margin-bottom: 0.4rem;
+}
+
+.form-grid > div:first-child > label,
+.modal__body > div:first-child > label,
+.settings-section > div:first-of-type > label {
+  margin-top: 0;
 }
 
 /* Shared forms & feedback */
