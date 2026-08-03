@@ -146,6 +146,35 @@ OAuth still redirects to port **4000** when using Vite (see `VITE_TWITCH_REDIREC
 
 Custom CSS is editable in **Settings → Overlay custom CSS**, or via MCP on the running API (`POST` [http://localhost:4000/mcp](http://localhost:4000/mcp)).
 
+#### Supported MCP tools
+
+Server name: `obs-trivia-game` · endpoint: `POST /mcp`
+
+| Tool | Description |
+|------|-------------|
+| `get_mcp_endpoint` | Returns this HTTP MCP path (`/mcp`) |
+| `get_overlay_style_guide` | Safe overlay CSS selectors and rules for OBS overlays |
+| `get_overlay_css` | Reads the current `overlayCustomCss` setting |
+| `set_overlay_css` | Replaces `overlayCustomCss` with a full CSS document |
+| `get_question_writing_guide` | Overlay layout rules for question/answer text (read before create/update) |
+| `list_questions` | Lists the question bank (`offset` / `limit` pagination) |
+| `get_question` | Fetches one question by id |
+| `create_question` | Creates a question (A–D options, correct answer, optional countdown) |
+| `update_question` | Updates fields on an existing question |
+| `delete_question` | Deletes a question (fails if it is in an active round) |
+
+Example client config (with the app running):
+
+```json
+{
+  "mcpServers": {
+    "obs-trivia-game": {
+      "url": "http://127.0.0.1:4000/mcp"
+    }
+  }
+}
+```
+
 ### Electron desktop app
 
 ```bash
