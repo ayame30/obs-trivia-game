@@ -71,7 +71,9 @@ If Windows SmartScreen appears, choose **More info** → **Run anyway**.
 
 ## Screenshots
 
-![Obs Trivia game dashboard](docs/images/screencap.png)
+![Question bank — create a question](docs/images/screencap1.png)
+
+![Live round preview and Stream mode](docs/images/screencap2.png)
 
 ---
 
