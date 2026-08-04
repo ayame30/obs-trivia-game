@@ -47,7 +47,7 @@ Twitch chat trivia with live OBS overlays (ABCD votes, scoreboard, countdown).
 ### Extras
 - Settings for chat templates, score multiplier, and overlay CSS
 - MCP endpoint for AI-assisted overlay CSS and question CRUD
-- Optional OBS Studio control panel via Custom Browser Dock (`http://localhost:4000/obs`)
+- Optional control panel in OBS (Custom Browser Dock) or Streamlabs (Layout Editor → Website) via `http://localhost:4000/obs`
 - GitHub Releases with a prebuilt Windows `.exe`
 
 ---
@@ -62,10 +62,11 @@ Twitch chat trivia with live OBS overlays (ABCD votes, scoreboard, countdown).
    - Scoreboard: [http://localhost:4000/overlay/scoreboard](http://localhost:4000/overlay/scoreboard)
 5. Keep the app **running** while you stream.
 
-### Optional: control panel inside OBS Studio
+### Optional: control panel inside OBS / Streamlabs
 
-- **Custom Browser Dock:** In OBS, open **View → Docks → Custom Browser Docks**, add a dock (e.g. name `Obs Trivia`), and set the URL to [http://localhost:4000/obs](http://localhost:4000/obs). Setup step 3 also shows a copyable control panel URL.
-- **Streamlabs:** use the Electron window for the control panel (no Custom Browser Dock support).
+- **OBS Studio — Custom Browser Dock:** Open **Docks → Custom Browser Docks**, add a dock (e.g. name `Obs Trivia`), and set the URL to [http://localhost:4000/obs](http://localhost:4000/obs).
+- **Streamlabs Desktop — Layout Editor:** Open **Layout Editor**, drag a **Website** panel into your layout, and set the URL to [http://localhost:4000/obs](http://localhost:4000/obs). You can also keep using the Electron window.
+- Setup step 3 also shows a copyable control panel URL. Keep the app **running** either way.
 
 To stop: close the app window.
 
