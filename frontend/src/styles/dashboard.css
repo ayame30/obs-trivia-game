@@ -770,6 +770,130 @@
   min-width: 0;
 }
 
+.overlay-setup-mode-tabs {
+  display: inline-flex;
+  margin-bottom: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.overlay-setup-mode-tabs button {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--muted);
+  padding: 0.45rem 1rem;
+  min-height: 2.1rem;
+  font-size: 0.88rem;
+  font-weight: 500;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.overlay-setup-mode-tabs button + button {
+  border-left: 1px solid var(--border);
+}
+
+.overlay-setup-mode-tabs button:hover:not(:disabled) {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.overlay-setup-mode-tabs button.is-active {
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--text);
+}
+
+.overlay-oneclick {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.overlay-oneclick .overlay-tutor-tabs {
+  align-self: flex-start;
+}
+
+.obs-oneclick {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  max-width: 42rem;
+}
+
+.obs-oneclick.setup-step__overlay-layout {
+  max-width: none;
+}
+
+.obs-oneclick__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.obs-oneclick__row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.obs-oneclick__row label {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.obs-oneclick__row input,
+.obs-oneclick__row select {
+  width: 100%;
+  max-width: 28rem;
+}
+
+.obs-oneclick__callout {
+  padding: 0.75rem 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--danger) 35%, var(--border));
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--danger) 8%, transparent);
+}
+
+.obs-oneclick__callout .setup-step__error {
+  margin-top: 0;
+}
+
+.obs-oneclick__refresh {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.obs-oneclick__tutor {
+  gap: 1rem;
+}
+
+.obs-oneclick__figure {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.obs-oneclick__figure figcaption {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.obs-oneclick__figure .setup-step__tutor-img {
+  max-width: 800px;
+}
+
 .setup-step__overlay-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(280px, 0.95fr);

@@ -5,6 +5,9 @@ const apiPort = process.env.PORT || 4000;
 
 export default defineConfig({
   plugins: [react()],
+  define: {
+    global: 'globalThis',
+  },
   server: {
     port: 3001,
     proxy: {

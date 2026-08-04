@@ -17,17 +17,20 @@
     "graphql": "^16.10.0",
     "graphql-ws": "^5.16.2",
     "i18next": "^26.3.6",
+    "obs-websocket-js": "^5.0.8",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-i18next": "^17.0.11",
     "react-icons": "^5.7.0",
     "react-router": "^8.3.0",
     "react-scale-text": "^1.2.2",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "sockjs-client": "^1.6.1"
   },
   "devDependencies": {
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
+    "@types/sockjs-client": "^1.5.4",
     "@vitejs/plugin-react": "^4.3.4",
     "typescript": "^5.7.2",
     "vite": "^6.0.3"

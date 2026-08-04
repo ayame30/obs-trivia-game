@@ -16,6 +16,7 @@ import SetupStep from './SetupStep';
 import QuestionManager from './QuestionManager';
 import LiveRoundPanel from './LiveRoundPanel';
 import ScoreboardEditor from './ScoreboardEditor';
+import OverlayOneClickSetup from './OverlayOneClickSetup';
 import { useTwitchAuth } from '../hooks/useTwitchAuth';
 import { getTwitchClientId, getTwitchOAuthUrl } from '../lib/twitchOAuth';
 import {
@@ -73,6 +74,7 @@ export default function DashboardSetup({
   const [testSent, setTestSent] = useState(false);
   const defaultTestMessage = t('setup.testMessageDefault');
   const [overlayAcknowledged, acknowledgeOverlay] = useOverlayAcknowledged();
+  const [overlaySetupMode, setOverlaySetupMode] = useState<'oneClick' | 'manual'>('oneClick');
   const [overlayTutorTab, setOverlayTutorTab] = useState<'obs' | 'streamlabs'>('obs');
 
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
@@ -387,104 +389,162 @@ export default function DashboardSetup({
         open={openStep === 3}
         onToggle={() => setOpenStep(openStep === 3 ? 0 : 3)}
       >
-        <div className="setup-step__overlay-layout">
-          <div className="setup-step__overlay-copy">
-            <p className="setup-step__hint">
-              <Trans i18nKey="setup.overlayHint1" components={{ strong: <strong /> }} />
-            </p>
-            <p className="setup-step__hint">
-              <Trans i18nKey="setup.overlayHint2" components={{ strong: <strong /> }} />
-            </p>
+        <div className="overlay-setup-mode-tabs" role="tablist" aria-label={t('setup.overlaySetupModes')}>
+          <button
+            type="button"
+            role="tab"
+            id="overlay-setup-tab-oneclick"
+            aria-selected={overlaySetupMode === 'oneClick'}
+            aria-controls="overlay-setup-panel"
+            className={overlaySetupMode === 'oneClick' ? 'is-active' : undefined}
+            onClick={() => setOverlaySetupMode('oneClick')}
+          >
+            {t('setup.overlayModeOneClick')}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            id="overlay-setup-tab-manual"
+            aria-selected={overlaySetupMode === 'manual'}
+            aria-controls="overlay-setup-panel"
+            className={overlaySetupMode === 'manual' ? 'is-active' : undefined}
+            onClick={() => setOverlaySetupMode('manual')}
+          >
+            {t('setup.overlayModeManual')}
+          </button>
+        </div>
 
-            <div className="setup-step__url-block">
-              <label>{t('setup.liveOverlay')}</label>
-              <div className="setup-step__url-row">
-                <input type="text" readOnly value={overlayUrl} />
-                <button type="button" className="secondary" onClick={() => copyUrl(overlayUrl)}>
-                  <FaCopy aria-hidden />
-                  {t('common.copy')}
-                </button>
-                <a href="/overlay/questions" target="_blank" rel="noreferrer" className="setup-step__preview-link">
-                  <FaExternalLinkAlt aria-hidden />
-                  {t('common.preview')}
-                </a>
+        <div
+          id="overlay-setup-panel"
+          role="tabpanel"
+          aria-labelledby={
+            overlaySetupMode === 'oneClick'
+              ? 'overlay-setup-tab-oneclick'
+              : 'overlay-setup-tab-manual'
+          }
+        >
+          {overlaySetupMode === 'oneClick' ? (
+            <OverlayOneClickSetup
+              triviaUrl={overlayUrl}
+              scoreboardUrl={scoreboardOverlayUrl}
+              onOverlaysReady={acknowledgeOverlay}
+            />
+          ) : (
+            <div className="setup-step__overlay-layout">
+              <div className="setup-step__overlay-copy">
+                <p className="setup-step__hint">
+                  <Trans i18nKey="setup.overlayHint1" components={{ strong: <strong /> }} />
+                </p>
+                <p className="setup-step__hint">
+                  <Trans i18nKey="setup.overlayHint2" components={{ strong: <strong /> }} />
+                </p>
+
+                <div className="setup-step__url-block">
+                  <label>{t('setup.liveOverlay')}</label>
+                  <div className="setup-step__url-row">
+                    <input type="text" readOnly value={overlayUrl} />
+                    <button type="button" className="secondary" onClick={() => copyUrl(overlayUrl)}>
+                      <FaCopy aria-hidden />
+                      {t('common.copy')}
+                    </button>
+                    <a
+                      href="/overlay/questions"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="setup-step__preview-link"
+                    >
+                      <FaExternalLinkAlt aria-hidden />
+                      {t('common.preview')}
+                    </a>
+                  </div>
+                  <p className="setup-step__hint">{t('setup.liveOverlayHint')}</p>
+                </div>
+
+                <div className="setup-step__url-block">
+                  <label>{t('setup.scoreboardOverlay')}</label>
+                  <div className="setup-step__url-row">
+                    <input type="text" readOnly value={scoreboardOverlayUrl} />
+                    <button
+                      type="button"
+                      className="secondary"
+                      onClick={() => copyUrl(scoreboardOverlayUrl)}
+                    >
+                      <FaCopy aria-hidden />
+                      {t('common.copy')}
+                    </button>
+                    <a
+                      href="/overlay/scoreboard"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="setup-step__preview-link"
+                    >
+                      <FaExternalLinkAlt aria-hidden />
+                      {t('common.preview')}
+                    </a>
+                  </div>
+                  <p className="setup-step__hint">{t('setup.scoreboardOverlayHint')}</p>
+                </div>
               </div>
-              <p className="setup-step__hint">{t('setup.liveOverlayHint')}</p>
-            </div>
 
-            <div className="setup-step__url-block">
-              <label>{t('setup.scoreboardOverlay')}</label>
-              <div className="setup-step__url-row">
-                <input type="text" readOnly value={scoreboardOverlayUrl} />
-                <button type="button" className="secondary" onClick={() => copyUrl(scoreboardOverlayUrl)}>
-                  <FaCopy aria-hidden />
-                  {t('common.copy')}
-                </button>
-                <a
-                  href="/overlay/scoreboard"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="setup-step__preview-link"
+              <div className="setup-step__tutor">
+                <div
+                  className="overlay-tutor-tabs"
+                  role="tablist"
+                  aria-label={t('setup.overlayTutorTabs')}
                 >
-                  <FaExternalLinkAlt aria-hidden />
-                  {t('common.preview')}
-                </a>
+                  <button
+                    type="button"
+                    role="tab"
+                    id="overlay-tutor-tab-obs"
+                    aria-selected={overlayTutorTab === 'obs'}
+                    aria-controls="overlay-tutor-panel"
+                    className={overlayTutorTab === 'obs' ? 'is-active' : undefined}
+                    onClick={() => setOverlayTutorTab('obs')}
+                  >
+                    {t('setup.overlayTabObs')}
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    id="overlay-tutor-tab-streamlabs"
+                    aria-selected={overlayTutorTab === 'streamlabs'}
+                    aria-controls="overlay-tutor-panel"
+                    className={overlayTutorTab === 'streamlabs' ? 'is-active' : undefined}
+                    onClick={() => setOverlayTutorTab('streamlabs')}
+                  >
+                    {t('setup.overlayTabStreamlabs')}
+                  </button>
+                </div>
+                <div
+                  className="setup-step__tutor-panel"
+                  id="overlay-tutor-panel"
+                  role="tabpanel"
+                  aria-labelledby={
+                    overlayTutorTab === 'obs'
+                      ? 'overlay-tutor-tab-obs'
+                      : 'overlay-tutor-tab-streamlabs'
+                  }
+                >
+                  <img
+                    className="setup-step__tutor-img"
+                    src={overlayTutorTab === 'obs' ? '/obs-tutor.png' : '/streamlabs-tutor.png'}
+                    alt={
+                      overlayTutorTab === 'obs'
+                        ? t('setup.overlayTutorAltObs')
+                        : t('setup.overlayTutorAltStreamlabs')
+                    }
+                  />
+                </div>
               </div>
-              <p className="setup-step__hint">{t('setup.scoreboardOverlayHint')}</p>
             </div>
+          )}
+        </div>
 
-            <div className="form-actions">
-              <button type="button" onClick={onClickAcknowledgeOverlay}>
-                <FaCheck aria-hidden />
-                {t('common.done')}
-              </button>
-            </div>
-          </div>
-
-          <div className="setup-step__tutor">
-            <div className="overlay-tutor-tabs" role="tablist" aria-label={t('setup.overlayTutorTabs')}>
-              <button
-                type="button"
-                role="tab"
-                id="overlay-tutor-tab-obs"
-                aria-selected={overlayTutorTab === 'obs'}
-                aria-controls="overlay-tutor-panel"
-                className={overlayTutorTab === 'obs' ? 'is-active' : undefined}
-                onClick={() => setOverlayTutorTab('obs')}
-              >
-                {t('setup.overlayTabObs')}
-              </button>
-              <button
-                type="button"
-                role="tab"
-                id="overlay-tutor-tab-streamlabs"
-                aria-selected={overlayTutorTab === 'streamlabs'}
-                aria-controls="overlay-tutor-panel"
-                className={overlayTutorTab === 'streamlabs' ? 'is-active' : undefined}
-                onClick={() => setOverlayTutorTab('streamlabs')}
-              >
-                {t('setup.overlayTabStreamlabs')}
-              </button>
-            </div>
-            <div
-              className="setup-step__tutor-panel"
-              id="overlay-tutor-panel"
-              role="tabpanel"
-              aria-labelledby={
-                overlayTutorTab === 'obs' ? 'overlay-tutor-tab-obs' : 'overlay-tutor-tab-streamlabs'
-              }
-            >
-              <img
-                className="setup-step__tutor-img"
-                src={overlayTutorTab === 'obs' ? '/obs-tutor.png' : '/streamlabs-tutor.png'}
-                alt={
-                  overlayTutorTab === 'obs'
-                    ? t('setup.overlayTutorAltObs')
-                    : t('setup.overlayTutorAltStreamlabs')
-                }
-              />
-            </div>
-          </div>
+        <div className="form-actions">
+          <button type="button" onClick={onClickAcknowledgeOverlay}>
+            <FaCheck aria-hidden />
+            {t('common.done')}
+          </button>
         </div>
       </SetupStep>
 
