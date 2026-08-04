@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@as-integrations/express5": "^1.1.2",
+    "@hackolade/keytar": "^7.9.0-7",
     "@modelcontextprotocol/sdk": "^1.30.0",
     "@nestjs/apollo": "^13.0.0",
     "@nestjs/common": "^11.0.0",
@@ -68,7 +69,13 @@
     ],
     "files": [
       "electron/**/*",
-      "package.json"
+      "package.json",
+      "node_modules/@hackolade/keytar/**/*",
+      "node_modules/node-addon-api/**/*",
+      "node_modules/node-gyp-build/**/*"
+    ],
+    "asarUnpack": [
+      "**/node_modules/@hackolade/keytar/**"
     ],
     "extraResources": [
       {

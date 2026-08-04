@@ -3,19 +3,23 @@ import { Trans, useTranslation } from 'react-i18next';
 import { FaCheck, FaPlug, FaSyncAlt } from 'react-icons/fa';
 import type { OBSWebSocket } from 'obs-websocket-js';
 import {
-  DEFAULT_OBS_WS_URL,
+  DEFAULT_OBS_WS_PORT,
   SCOREBOARD_SOURCE_NAME,
   TRIVIA_SOURCE_NAME,
   addOverlaysToScene,
+  classifyObsError,
   connectObs,
   createObsClient,
   findExistingOverlays,
   formatObsError,
   getCurrentProgramScene,
   listSceneNames,
+  obsWsUrl,
   refreshOverlayCaches,
+  sanitizeObsPassword,
   type ObsConnectionStatus,
 } from '../lib/obsWebSocket';
+import { SECRET_ACCOUNTS, getStoredSecret, setStoredSecret } from '../lib/secureSecrets';
 
 interface ObsOneClickSetupProps {
   triviaUrl: string;
@@ -33,6 +37,8 @@ export default function ObsOneClickSetup({
 
   const [status, setStatus] = useState<ObsConnectionStatus>('idle');
   const [error, setError] = useState<string | null>(null);
+  const [errorKind, setErrorKind] = useState<'auth' | 'unreachable' | 'other' | null>(null);
+  const [port, setPort] = useState(String(DEFAULT_OBS_WS_PORT));
   const [password, setPassword] = useState('');
   const [scenes, setScenes] = useState<string[]>([]);
   const [sceneName, setSceneName] = useState('');
@@ -42,7 +48,12 @@ export default function ObsOneClickSetup({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
+    void getStoredSecret(SECRET_ACCOUNTS.obsWebsocketPassword).then((stored) => {
+      if (!cancelled && stored) setPassword(sanitizeObsPassword(stored));
+    });
     return () => {
+      cancelled = true;
       const obs = obsRef.current;
       obsRef.current = null;
       if (obs) void obs.disconnect();
@@ -51,6 +62,7 @@ export default function ObsOneClickSetup({
 
   async function handleConnect() {
     setError(null);
+    setErrorKind(null);
     setSuccessMessage(null);
     setStatus('connecting');
 
@@ -63,11 +75,22 @@ export default function ObsOneClickSetup({
       }
     }
 
+    const portNumber = Number(port);
+    if (!Number.isInteger(portNumber) || portNumber <= 0) {
+      setStatus('error');
+      setErrorKind('other');
+      setError(t('setup.obsPortInvalid'));
+      return;
+    }
+
+    const cleanedPassword = sanitizeObsPassword(password);
     const obs = createObsClient();
     obsRef.current = obs;
 
     try {
-      await connectObs(obs, DEFAULT_OBS_WS_URL, password.trim());
+      await connectObs(obs, obsWsUrl(portNumber), cleanedPassword);
+      await setStoredSecret(SECRET_ACCOUNTS.obsWebsocketPassword, cleanedPassword);
+      setPassword(cleanedPassword);
       const sceneNames = await listSceneNames(obs);
       const current = await getCurrentProgramScene(obs);
       const found = await findExistingOverlays(obs);
@@ -86,6 +109,7 @@ export default function ObsOneClickSetup({
       setSceneName('');
       setExisting({ trivia: false, scoreboard: false });
       setStatus('error');
+      setErrorKind(classifyObsError(err));
       setError(formatObsError(err));
     }
   }
@@ -142,19 +166,34 @@ export default function ObsOneClickSetup({
         <p className="setup-step__hint">
           <Trans i18nKey="setup.obsOneClickHint" components={{ strong: <strong /> }} />
         </p>
-        <p className="setup-step__hint">{t('setup.obsWsDefault', { url: DEFAULT_OBS_WS_URL })}</p>
+        <p className="setup-step__hint">{t('setup.obsWsDefault')}</p>
+
+        <div className="obs-oneclick__row">
+          <label htmlFor="obs-ws-port">{t('setup.obsPort')}</label>
+          <input
+            id="obs-ws-port"
+            type="number"
+            min={1}
+            value={port}
+            onChange={(e) => setPort(e.target.value)}
+            disabled={status === 'connecting'}
+          />
+        </div>
 
         <div className="obs-oneclick__row">
           <label htmlFor="obs-ws-password">{t('setup.obsPassword')}</label>
           <input
             id="obs-ws-password"
             type="password"
-            autoComplete="off"
+            name="obs-ws-password"
+            autoComplete="new-password"
+            spellCheck={false}
             value={password}
             placeholder={t('setup.obsPasswordPlaceholder')}
             onChange={(e) => setPassword(e.target.value)}
             disabled={status === 'connecting'}
           />
+          <p className="setup-step__hint">{t('setup.obsPasswordHint')}</p>
         </div>
 
         <div className="form-actions">
@@ -172,7 +211,12 @@ export default function ObsOneClickSetup({
           <div className="obs-oneclick__callout" role="alert">
             <p className="setup-step__error">{t('setup.obsConnectFailed')}</p>
             <p className="setup-step__hint">
-              <Trans i18nKey="setup.obsOpenHint" components={{ strong: <strong /> }} />
+              <Trans
+                i18nKey={
+                  errorKind === 'auth' ? 'setup.obsAuthHint' : 'setup.obsOpenHint'
+                }
+                components={{ strong: <strong /> }}
+              />
             </p>
             {error ? <p className="setup-step__hint">{error}</p> : null}
           </div>

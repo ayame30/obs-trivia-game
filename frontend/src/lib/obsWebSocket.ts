@@ -1,6 +1,7 @@
-import { OBSWebSocket } from 'obs-websocket-js';
+import { OBSWebSocket, OBSWebSocketError } from 'obs-websocket-js';
 
 export const DEFAULT_OBS_WS_URL = 'ws://127.0.0.1:4455';
+export const DEFAULT_OBS_WS_PORT = 4455;
 
 export const OVERLAY_BROWSER_CSS =
   'body { background-color: rgba(0, 0, 0, 0); margin: 0px auto; overflow: hidden; }';
@@ -24,8 +25,18 @@ function browserSourceSettings(url: string) {
   };
 }
 
+export function sanitizeObsPassword(password: string): string {
+  return String(password ?? '')
+    .replace(/\0+/g, '')
+    .trim();
+}
+
 export function createObsClient(): OBSWebSocket {
   return new OBSWebSocket();
+}
+
+export function obsWsUrl(port = DEFAULT_OBS_WS_PORT): string {
+  return `ws://127.0.0.1:${port}`;
 }
 
 export async function connectObs(
@@ -33,7 +44,8 @@ export async function connectObs(
   url = DEFAULT_OBS_WS_URL,
   password = ''
 ): Promise<void> {
-  await obs.connect(url, password || undefined);
+  const cleaned = sanitizeObsPassword(password);
+  await obs.connect(url, cleaned.length > 0 ? cleaned : undefined);
 }
 
 export async function listSceneNames(obs: OBSWebSocket): Promise<string[]> {
@@ -138,8 +150,52 @@ export async function refreshOverlayCaches(obs: OBSWebSocket): Promise<{
   return existing;
 }
 
+export type ObsErrorKind = 'auth' | 'unreachable' | 'other';
+
+export function classifyObsError(err: unknown): ObsErrorKind {
+  const code =
+    err instanceof OBSWebSocketError
+      ? err.code
+      : err && typeof err === 'object' && 'code' in err
+        ? Number((err as { code: unknown }).code)
+        : NaN;
+  const message = (err instanceof Error ? err.message : String(err ?? '')).toLowerCase();
+
+  if (
+    code === 4009 ||
+    code === 4008 ||
+    message.includes('authentication') ||
+    message.includes('auth') ||
+    message.includes('password')
+  ) {
+    return 'auth';
+  }
+
+  if (
+    code === 1006 ||
+    code === 1001 ||
+    code === -1 ||
+    message.includes('failed to fetch') ||
+    message.includes('connection refused') ||
+    message.includes('network') ||
+    message.includes('econnrefused') ||
+    message.includes('closed') ||
+    message.includes('unreachable')
+  ) {
+    return 'unreachable';
+  }
+
+  return 'other';
+}
+
 export function formatObsError(err: unknown): string {
+  if (err instanceof OBSWebSocketError) {
+    return err.message ? `${err.message} (${err.code})` : `OBS error ${err.code}`;
+  }
   if (err instanceof Error) return err.message;
   if (typeof err === 'string') return err;
+  if (err && typeof err === 'object' && 'message' in err) {
+    return String((err as { message: unknown }).message);
+  }
   return String(err);
 }

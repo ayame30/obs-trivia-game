@@ -12,6 +12,7 @@ import {
   type StreamlabsConnectionStatus,
   type StreamlabsScene,
 } from '../lib/streamlabsWebSocket';
+import { SECRET_ACCOUNTS, getStoredSecret, setStoredSecret } from '../lib/secureSecrets';
 
 interface StreamlabsOneClickSetupProps {
   triviaUrl: string;
@@ -39,7 +40,12 @@ export default function StreamlabsOneClickSetup({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
+    void getStoredSecret(SECRET_ACCOUNTS.streamlabsApiToken).then((stored) => {
+      if (!cancelled && stored) setToken(stored);
+    });
     return () => {
+      cancelled = true;
       const client = clientRef.current;
       clientRef.current = null;
       if (client) void client.disconnect();
@@ -77,6 +83,7 @@ export default function StreamlabsOneClickSetup({
 
     try {
       await client.connect(portNumber, token);
+      await setStoredSecret(SECRET_ACCOUNTS.streamlabsApiToken, token);
       const sceneList = await client.getScenes();
       const activeId = await client.getActiveSceneId();
       const found = await client.findExistingOverlays();
@@ -177,7 +184,8 @@ export default function StreamlabsOneClickSetup({
           <input
             id="sl-ws-token"
             type="password"
-            autoComplete="off"
+            name="sl-ws-token"
+            spellCheck={false}
             value={token}
             placeholder={t('setup.slTokenPlaceholder')}
             onChange={(e) => setToken(e.target.value)}

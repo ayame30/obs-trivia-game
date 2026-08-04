@@ -15,6 +15,9 @@ interface ObsTriviaDesktop {
   minimize: () => void;
   maximize: () => void;
   close: () => void;
+  getSecret: (service: string, account: string) => Promise<string | null>;
+  setSecret: (service: string, account: string, password: string) => Promise<boolean>;
+  deleteSecret: (service: string, account: string) => Promise<boolean>;
 }
 
 interface Window {

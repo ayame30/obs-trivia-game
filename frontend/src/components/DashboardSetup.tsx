@@ -74,7 +74,7 @@ export default function DashboardSetup({
   const [testSent, setTestSent] = useState(false);
   const defaultTestMessage = t('setup.testMessageDefault');
   const [overlayAcknowledged, acknowledgeOverlay] = useOverlayAcknowledged();
-  const [overlaySetupMode, setOverlaySetupMode] = useState<'oneClick' | 'manual'>('oneClick');
+  const [overlaySetupMode, setOverlaySetupMode] = useState<'oneClick' | 'manual'>('manual');
   const [overlayTutorTab, setOverlayTutorTab] = useState<'obs' | 'streamlabs'>('obs');
 
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
@@ -393,17 +393,6 @@ export default function DashboardSetup({
           <button
             type="button"
             role="tab"
-            id="overlay-setup-tab-oneclick"
-            aria-selected={overlaySetupMode === 'oneClick'}
-            aria-controls="overlay-setup-panel"
-            className={overlaySetupMode === 'oneClick' ? 'is-active' : undefined}
-            onClick={() => setOverlaySetupMode('oneClick')}
-          >
-            {t('setup.overlayModeOneClick')}
-          </button>
-          <button
-            type="button"
-            role="tab"
             id="overlay-setup-tab-manual"
             aria-selected={overlaySetupMode === 'manual'}
             aria-controls="overlay-setup-panel"
@@ -411,6 +400,17 @@ export default function DashboardSetup({
             onClick={() => setOverlaySetupMode('manual')}
           >
             {t('setup.overlayModeManual')}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            id="overlay-setup-tab-oneclick"
+            aria-selected={overlaySetupMode === 'oneClick'}
+            aria-controls="overlay-setup-panel"
+            className={overlaySetupMode === 'oneClick' ? 'is-active' : undefined}
+            onClick={() => setOverlaySetupMode('oneClick')}
+          >
+            {t('setup.overlayModeOneClick')}
           </button>
         </div>
 

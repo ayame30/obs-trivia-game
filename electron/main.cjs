@@ -193,6 +193,28 @@ function registerWindowIpc() {
     if (!win) return;
     win.close();
   });
+
+  ipcMain.handle('secrets:get', async (_event, service, account) => {
+    const keytar = require('@hackolade/keytar');
+    const value = await keytar.getPassword(String(service), String(account));
+    return value == null ? null : String(value).replace(/\0+/g, '');
+  });
+
+  ipcMain.handle('secrets:set', async (_event, service, account, password) => {
+    const keytar = require('@hackolade/keytar');
+    await keytar.setPassword(String(service), String(account), String(password ?? ''));
+    return true;
+  });
+
+  ipcMain.handle('secrets:delete', async (_event, service, account) => {
+    const keytar = require('@hackolade/keytar');
+    try {
+      await keytar.deletePassword(String(service), String(account));
+    } catch {
+      // Missing entry is fine.
+    }
+    return true;
+  });
 }
 
 function getAppIconPath() {
