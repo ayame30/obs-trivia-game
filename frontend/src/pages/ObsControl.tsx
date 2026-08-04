@@ -4,6 +4,7 @@ import { useMutation } from '@apollo/client/react';
 import { FaSyncAlt } from 'react-icons/fa';
 import QuestionManager from '../components/QuestionManager';
 import ScoreboardEditor from '../components/ScoreboardEditor';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 import { useTriviaLive } from '../hooks/useTriviaLive';
 import { RESET_ROUNDS } from '../graphql/operations';
 
@@ -59,6 +60,10 @@ export default function ObsControl() {
       <section className="obs-control-page__section card">
         <ScoreboardEditor entries={scoreboard} readOnly />
       </section>
+
+      <footer className="obs-control-page__footer">
+        <LanguageSwitcher />
+      </footer>
     </div>
   );
 }

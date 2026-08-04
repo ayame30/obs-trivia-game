@@ -413,36 +413,48 @@ export default function QuestionManager({
             </div>
           ) : null}
 
-          {streamOnly ? (
-            <div className="question-grid" role="table" aria-label={t('questions.bank')}>
-              <div className="question-grid__row question-grid__row--head" role="row">
-                <span role="columnheader">{t('questions.colId')}</span>
-                <span role="columnheader">{t('questions.colQuestion')}</span>
-                <span role="columnheader">{t('questions.colAns')}</span>
-                <span role="columnheader">{t('questions.colTimer')}</span>
-                <span role="columnheader">{t('questions.colActions')}</span>
-              </div>
-              {questions.length === 0 ? (
-                <p className="question-grid__empty">{t('questions.emptyStream')}</p>
-              ) : (
-                questions.map((q) => {
-                  const isActiveQuestion = hasActive && activeRound?.questionId === q.id;
-                  return (
-                    <div key={q.id} className="question-grid__row" role="row">
-                      <span className="question-grid__id" role="cell">
-                        {q.id}
-                      </span>
-                      <span className="question-grid__question" role="cell" title={q.text}>
-                        {q.text}
-                      </span>
-                      <span className="question-grid__ans" role="cell">
-                        {q.correctAnswer}
-                      </span>
-                      <span className="question-grid__timer" role="cell">
-                        {q.countdownSeconds ?? 30}s
-                      </span>
-                      <div className="question-grid__actions question-table__actions" role="cell">
-                        {isActiveQuestion ? (
+          <div className="question-grid" role="table" aria-label={t('questions.bank')}>
+            <div className="question-grid__row question-grid__row--head" role="row">
+              <span className="question-grid__id" role="columnheader">
+                {t('questions.colId')}
+              </span>
+              <span className="question-grid__question" role="columnheader">
+                {t('questions.colQuestion')}
+              </span>
+              <span className="question-grid__ans" role="columnheader">
+                {t('questions.colAns')}
+              </span>
+              <span className="question-grid__timer" role="columnheader">
+                {t('questions.colTimer')}
+              </span>
+              <span className="question-grid__actions" role="columnheader">
+                {t('questions.colActions')}
+              </span>
+            </div>
+            {questions.length === 0 ? (
+              <p className="question-grid__empty">
+                {isEditMode ? t('questions.emptyEdit') : t('questions.emptyStream')}
+              </p>
+            ) : (
+              questions.map((q) => {
+                const isActiveQuestion = hasActive && activeRound?.questionId === q.id;
+                return (
+                  <div key={q.id} className="question-grid__row" role="row">
+                    <span className="question-grid__id" role="cell">
+                      {q.id}
+                    </span>
+                    <span className="question-grid__question" role="cell" title={q.text}>
+                      {q.text}
+                    </span>
+                    <span className="question-grid__ans" role="cell">
+                      {q.correctAnswer}
+                    </span>
+                    <span className="question-grid__timer" role="cell">
+                      {q.countdownSeconds ?? 30}s
+                    </span>
+                    <div className="question-grid__actions question-table__actions" role="cell">
+                      {isStreamMode ? (
+                        isActiveQuestion ? (
                           <>
                             {countdownPaused ? (
                               <button
@@ -476,6 +488,7 @@ export default function QuestionManager({
                               onClick={() => stopQuestion()}
                             >
                               <FaEye aria-hidden />
+                              {streamOnly ? null : t('questions.reveal')}
                             </button>
                           </>
                         ) : (
@@ -489,146 +502,54 @@ export default function QuestionManager({
                           >
                             <FaPlay aria-hidden />
                           </button>
-                        )}
-                      </div>
+                        )
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            className="question-table__btn question-table__btn--edit"
+                            aria-label={t('questions.edit')}
+                            title={t('questions.edit')}
+                            onClick={() => startEdit(q)}
+                          >
+                            <FaEdit aria-hidden />
+                          </button>
+                          <button
+                            type="button"
+                            className="question-table__btn"
+                            aria-label={t('questions.copy')}
+                            title={t('questions.copy')}
+                            onClick={() => startCopy(q)}
+                          >
+                            <FaCopy aria-hidden />
+                          </button>
+                          <button
+                            type="button"
+                            className="question-table__btn question-table__btn--danger"
+                            aria-label={t('questions.delete')}
+                            title={
+                              isActiveQuestion
+                                ? t('questions.cannotDeleteActive')
+                                : t('questions.delete')
+                            }
+                            disabled={isActiveQuestion}
+                            onClick={() => {
+                              if (isActiveQuestion) return;
+                              if (window.confirm(t('questions.deleteConfirm'))) {
+                                deleteQuestion({ variables: { id: q.id } });
+                              }
+                            }}
+                          >
+                            <FaTrash aria-hidden />
+                          </button>
+                        </>
+                      )}
                     </div>
-                  );
-                })
-              )}
-            </div>
-          ) : (
-            <table className="question-table">
-              <thead>
-                <tr>
-                  <th>{t('questions.colId')}</th>
-                  <th>{t('questions.colQuestion')}</th>
-                  <th>{t('questions.colAns')}</th>
-                  <th>{t('questions.colTimer')}</th>
-                  <th>{t('questions.colActions')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {questions.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="question-table__empty">
-                      {isEditMode ? t('questions.emptyEdit') : t('questions.emptyStream')}
-                    </td>
-                  </tr>
-                ) : (
-                  questions.map((q) => {
-                    const isActiveQuestion = hasActive && activeRound?.questionId === q.id;
-                    return (
-                      <tr key={q.id}>
-                        <td>{q.id}</td>
-                        <td className="question-table__question">
-                          <span className="question-table__text" title={q.text}>
-                            {q.text}
-                          </span>
-                        </td>
-                        <td>{q.correctAnswer}</td>
-                        <td>{q.countdownSeconds ?? 30}s</td>
-                        <td>
-                          <div className="question-table__actions">
-                            {isStreamMode ? (
-                              isActiveQuestion ? (
-                                <>
-                                  {countdownPaused ? (
-                                    <button
-                                      type="button"
-                                      className="question-table__btn question-table__btn--start"
-                                      aria-label={t('questions.resume')}
-                                      title={t('questions.resume')}
-                                      disabled={resuming}
-                                      onClick={() => resumeCountdown()}
-                                    >
-                                      <FaPlay aria-hidden />
-                                    </button>
-                                  ) : (
-                                    <button
-                                      type="button"
-                                      className="question-table__btn question-table__btn--pause"
-                                      aria-label={t('questions.pause')}
-                                      title={t('questions.pause')}
-                                      disabled={pausing}
-                                      onClick={() => pauseCountdown()}
-                                    >
-                                      <FaPause aria-hidden />
-                                    </button>
-                                  )}
-                                  <button
-                                    type="button"
-                                    className="question-table__btn question-table__btn--reveal"
-                                    aria-label={t('questions.reveal')}
-                                    title={t('questions.reveal')}
-                                    disabled={stopping}
-                                    onClick={() => stopQuestion()}
-                                  >
-                                    <FaEye aria-hidden />
-                                    {t('questions.reveal')}
-                                  </button>
-                                </>
-                              ) : (
-                                <button
-                                  type="button"
-                                  className="question-table__btn question-table__btn--start"
-                                  aria-label={t('questions.start')}
-                                  title={t('questions.start')}
-                                  disabled={hasActive || starting}
-                                  onClick={() => startQuestion({ variables: { questionId: q.id } })}
-                                >
-                                  <FaPlay aria-hidden />
-                                </button>
-                              )
-                            ) : (
-                              <>
-                                <button
-                                  type="button"
-                                  className="question-table__btn question-table__btn--edit"
-                                  aria-label={t('questions.edit')}
-                                  title={t('questions.edit')}
-                                  onClick={() => startEdit(q)}
-                                >
-                                  <FaEdit aria-hidden />
-                                </button>
-                                <button
-                                  type="button"
-                                  className="question-table__btn"
-                                  aria-label={t('questions.copy')}
-                                  title={t('questions.copy')}
-                                  onClick={() => startCopy(q)}
-                                >
-                                  <FaCopy aria-hidden />
-                                </button>
-                                <button
-                                  type="button"
-                                  className="question-table__btn question-table__btn--danger"
-                                  aria-label={t('questions.delete')}
-                                  title={
-                                    isActiveQuestion
-                                      ? t('questions.cannotDeleteActive')
-                                      : t('questions.delete')
-                                  }
-                                  disabled={isActiveQuestion}
-                                  onClick={() => {
-                                    if (isActiveQuestion) return;
-                                    if (window.confirm(t('questions.deleteConfirm'))) {
-                                      deleteQuestion({ variables: { id: q.id } });
-                                    }
-                                  }}
-                                >
-                                  <FaTrash aria-hidden />
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          )}
+                  </div>
+                );
+              })
+            )}
+          </div>
         </>
       )}
 

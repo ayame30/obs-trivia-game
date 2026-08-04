@@ -64,7 +64,23 @@ const splitLink = ApolloLink.split(
 
 export const apolloClient = new ApolloClient({
   link: splitLink,
-  cache: new InMemoryCache(),
+  cache: new InMemoryCache({
+    typePolicies: {
+      Question: {
+        fields: {
+          // Live rounds hide the answer (null) until reveal; don't wipe bank cache.
+          correctAnswer: {
+            merge(existing: string | null | undefined, incoming: string | null | undefined) {
+              if ((incoming === null || incoming === undefined) && existing != null) {
+                return existing;
+              }
+              return incoming;
+            },
+          },
+        },
+      },
+    },
+  }),
   defaultOptions: {
     watchQuery: { fetchPolicy: 'cache-and-network' },
   },

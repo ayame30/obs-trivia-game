@@ -79,6 +79,8 @@ If Windows SmartScreen appears, choose **More info** → **Run anyway**.
 
 ![Live round preview and Stream mode](docs/images/screencap2.png)
 
+![OBS Custom Browser Dock — `/obs` control panel beside the trivia overlay](docs/images/screencap-obs-dock.png)
+
 ---
 
 ## For developers
