@@ -7,6 +7,7 @@ import ScoreboardOverlay from './pages/ScoreboardOverlay';
 import Auth from './pages/Auth';
 import Settings from './pages/Settings';
 import Questions from './pages/Questions';
+import ObsControl from './pages/ObsControl';
 
 export default function App() {
   return (
@@ -19,6 +20,7 @@ export default function App() {
             <Route path="auth" element={<Auth />} />
             <Route path="settings" element={<Settings />} />
           </Route>
+          <Route path="obs" element={<ObsControl />} />
           <Route path="overlay">
             <Route path="questions" element={<Overlay />} />
             <Route path="scoreboard" element={<ScoreboardOverlay />} />

@@ -15,13 +15,11 @@ Twitch chat trivia with live OBS overlays (ABCD votes, scoreboard, countdown).
    - [Frontend hot reload](#frontend-hot-reload-optional)
    - [Overlay CSS + MCP](#overlay-css-file-split--mcp)
    - [Electron desktop app](#electron-desktop-app)
-   - [GitHub Releases](#github-releases)
-5. [Twitch chat votes](#twitch-chat-votes)
-6. [GraphQL (developers)](#graphql-developers)
+5. [GraphQL (developers)](#graphql-developers)
    - [Questions](#questions)
    - [Live round](#live-round)
    - [Subscriptions](#subscriptions)
-7. [License](#license)
+6. [License](#license)
 
 ---
 
@@ -49,6 +47,7 @@ Twitch chat trivia with live OBS overlays (ABCD votes, scoreboard, countdown).
 ### Extras
 - Settings for chat templates, score multiplier, and overlay CSS
 - MCP endpoint for AI-assisted overlay CSS and question CRUD
+- Optional OBS Studio control panel via Custom Browser Dock (`http://localhost:4000/obs`)
 - GitHub Releases with a prebuilt Windows `.exe`
 
 ---
@@ -62,6 +61,11 @@ Twitch chat trivia with live OBS overlays (ABCD votes, scoreboard, countdown).
    - Trivia overlay: [http://localhost:4000/overlay/questions](http://localhost:4000/overlay/questions)
    - Scoreboard: [http://localhost:4000/overlay/scoreboard](http://localhost:4000/overlay/scoreboard)
 5. Keep the app **running** while you stream.
+
+### Optional: control panel inside OBS Studio
+
+- **Custom Browser Dock:** In OBS, open **View → Docks → Custom Browser Docks**, add a dock (e.g. name `Obs Trivia`), and set the URL to [http://localhost:4000/obs](http://localhost:4000/obs). Setup step 3 also shows a copyable control panel URL.
+- **Streamlabs:** use the Electron window for the control panel (no Custom Browser Dock support).
 
 To stop: close the app window.
 
@@ -117,6 +121,7 @@ npm run build:start
 | Surface | URL |
 |---------|-----|
 | App | [http://localhost:4000/](http://localhost:4000/) |
+| OBS dock control | [http://localhost:4000/obs](http://localhost:4000/obs) |
 | Trivia overlay | [http://localhost:4000/overlay/questions](http://localhost:4000/overlay/questions) |
 | Scoreboard overlay | [http://localhost:4000/overlay/scoreboard](http://localhost:4000/overlay/scoreboard) |
 | Twitch OAuth redirect | [http://localhost:4000/](http://localhost:4000/) (register this URI on your Twitch app) |

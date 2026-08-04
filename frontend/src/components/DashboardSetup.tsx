@@ -78,6 +78,7 @@ export default function DashboardSetup({
   const [overlayTutorTab, setOverlayTutorTab] = useState<'obs' | 'streamlabs'>('obs');
 
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const controlPanelUrl = origin ? `${origin}/obs` : 'http://localhost:4000/obs';
   const overlayUrl = `${origin}/overlay/questions`;
   const scoreboardOverlayUrl = `${origin}/overlay/scoreboard`;
 
@@ -389,6 +390,27 @@ export default function DashboardSetup({
         open={openStep === 3}
         onToggle={() => setOpenStep(openStep === 3 ? 0 : 3)}
       >
+        <div className="setup-step__dock-callout">
+          <h3 className="setup-step__dock-title">{t('setup.dockTitle')}</h3>
+          <p className="setup-step__hint">
+            <Trans i18nKey="setup.dockHintObs" components={{ strong: <strong /> }} />
+          </p>
+          <div className="setup-step__url-block setup-step__url-block--flush">
+            <label>{t('setup.dockControlPanelUrl')}</label>
+            <div className="setup-step__url-row">
+              <input type="text" readOnly value={controlPanelUrl} />
+              <button type="button" className="secondary" onClick={() => copyUrl(controlPanelUrl)}>
+                <FaCopy aria-hidden />
+                {t('common.copy')}
+              </button>
+            </div>
+          </div>
+          <p className="setup-step__hint">
+            <Trans i18nKey="setup.dockHintNotes" components={{ strong: <strong /> }} />
+          </p>
+          <p className="setup-step__hint">{t('setup.dockHintStreamlabs')}</p>
+        </div>
+
         <div className="overlay-setup-mode-tabs" role="tablist" aria-label={t('setup.overlaySetupModes')}>
           <button
             type="button"

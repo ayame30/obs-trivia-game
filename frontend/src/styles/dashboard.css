@@ -752,6 +752,28 @@
   border-top: 1px solid var(--border-subtle);
 }
 
+.setup-step__dock-callout {
+  margin-bottom: 1.25rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.setup-step__dock-title {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.setup-step__dock-callout .setup-step__hint {
+  margin-bottom: 0.55rem;
+}
+
+.setup-step__dock-callout .setup-step__hint:last-child {
+  margin-bottom: 0;
+}
+
 .setup-step__url-block {
   margin-bottom: 1.1rem;
   padding: 0.85rem 0 0;
@@ -761,6 +783,12 @@
 .setup-step__url-block:first-of-type {
   border-top: none;
   padding-top: 0;
+}
+
+.setup-step__url-block--flush {
+  border-top: none;
+  padding-top: 0.35rem;
+  margin-bottom: 0.55rem;
 }
 
 .setup-step__tutor {
@@ -1212,6 +1240,227 @@
 
 .questions-page > .card {
   flex: 1 1 auto;
+}
+
+.obs-control-page {
+  box-sizing: border-box;
+  height: 100%;
+  max-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  padding: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.obs-control-page > * {
+  flex-shrink: 0;
+}
+
+.obs-control-page__section {
+  margin: 0;
+  min-width: 0;
+  padding: 0.55rem 0.65rem;
+}
+
+.obs-control-page .question-manager--embedded {
+  margin: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.obs-control-page h2,
+.obs-control-page h3 {
+  font-size: 0.85rem;
+  margin-bottom: 0.4rem;
+}
+
+.obs-control-page .setup-step__hint,
+.obs-control-page .dashboard__status {
+  font-size: 0.75rem;
+  margin: 0.25rem 0;
+}
+
+.obs-control-page button,
+.obs-control-page .secondary,
+.obs-control-page .bank-mode-toggle button {
+  padding: 0.28rem 0.55rem;
+  min-height: 1.7rem;
+  font-size: 0.75rem;
+}
+
+.obs-control-page .question-manager__header {
+  margin-bottom: 0.4rem;
+  gap: 0.4rem;
+}
+
+.obs-control-page .question-manager__header h2 {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.obs-control-page .bank-mode-toggle button {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.72rem;
+}
+
+.obs-control-page .pagination {
+  margin: 0.35rem 0;
+  gap: 0.35rem;
+}
+
+.obs-control-page .pagination__meta {
+  font-size: 0.72rem;
+}
+
+.obs-control-page .question-manager__toolbar {
+  margin: 0.35rem 0;
+}
+
+.obs-control-page .question-manager__add {
+  padding: 0.28rem 0.55rem;
+  font-size: 0.75rem;
+}
+
+.obs-control-page .question-table {
+  font-size: 0.68rem;
+  table-layout: auto;
+}
+
+.obs-control-page .question-table th,
+.obs-control-page .question-table td {
+  padding: 0.28rem 0.25rem;
+}
+
+.obs-control-page .question-table th {
+  font-size: 0.6rem;
+}
+
+.obs-control-page .question-table th:nth-child(2),
+.obs-control-page .question-table td.question-table__question {
+  min-width: 100px;
+  width: auto;
+}
+
+.obs-control-page .question-table__text {
+  font-size: 0.68rem;
+}
+
+.obs-control-page .question-table__btn {
+  padding: 0.2rem 0.4rem;
+  font-size: 0.65rem;
+  min-height: 1.45rem;
+}
+
+.obs-control-page .question-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  min-width: 0;
+  font-size: 0.68rem;
+}
+
+.obs-control-page .question-grid__row {
+  display: grid;
+  grid-template-columns: 2rem minmax(100px, 1fr) 1.75rem 2.5rem auto;
+  gap: 0.35rem;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  padding: 0.28rem 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.obs-control-page .question-grid__row--head {
+  padding-bottom: 0.35rem;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.obs-control-page .question-grid__question {
+  min-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.obs-control-page .question-grid__id,
+.obs-control-page .question-grid__ans,
+.obs-control-page .question-grid__timer {
+  white-space: nowrap;
+}
+
+.obs-control-page .question-grid__actions {
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+}
+
+.obs-control-page .question-grid__empty {
+  margin: 0.5rem 0 0;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.obs-control-page .question-manager__round-actions {
+  gap: 0.35rem;
+  margin-top: 0.4rem;
+}
+
+.obs-control-page .scoreboard-editor h3 {
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.obs-control-page .scoreboard-list {
+  font-size: 0.75rem;
+  gap: 0.25rem;
+}
+
+.obs-control-page .scoreboard-list li {
+  padding: 0.3rem 0.35rem;
+}
+
+.obs-control-page .scoreboard-input {
+  padding: 0.2rem 0.3rem;
+  font-size: 0.75rem;
+  max-width: 4.5rem;
+}
+
+.obs-control-page .scoreboard-btn {
+  padding: 0.2rem 0.4rem;
+  min-height: 1.5rem;
+  font-size: 0.7rem;
+}
+
+.obs-control-page .scoreboard-editor-toolbar {
+  gap: 0.35rem;
+}
+
+.obs-control-page .setup-step__live-header {
+  margin-bottom: 0.4rem;
+  gap: 0.4rem;
+}
+
+.obs-control-page input,
+.obs-control-page select,
+.obs-control-page textarea {
+  font-size: 0.75rem;
+  padding: 0.3rem 0.4rem;
+}
+
+.obs-control-page .error-banner {
+  padding: 0.4rem 0.55rem;
+  font-size: 0.75rem;
+  margin-bottom: 0.35rem;
 }
 
 .settings-page h2 {

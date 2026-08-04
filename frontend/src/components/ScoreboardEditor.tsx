@@ -27,6 +27,8 @@ interface ScoreboardEditorProps {
   onSaved?: (entries: ScoreboardEntry[]) => void;
   onReset?: () => void;
   resetting?: boolean;
+  /** Hide edit/reset controls (view-only list). */
+  readOnly?: boolean;
 }
 
 export default function ScoreboardEditor({
@@ -34,6 +36,7 @@ export default function ScoreboardEditor({
   onSaved,
   onReset,
   resetting = false,
+  readOnly = false,
 }: ScoreboardEditorProps) {
   const { t } = useTranslation();
   const { scoreMultiplier } = useAppSettings();
@@ -148,7 +151,7 @@ export default function ScoreboardEditor({
       <div className="setup-step__live-header">
         <h3>{t('scoreboard.title')}</h3>
         <div className="scoreboard-editor-toolbar">
-          {onReset ? (
+          {!readOnly && onReset ? (
             <button
               type="button"
               className="secondary"
@@ -159,12 +162,13 @@ export default function ScoreboardEditor({
               {t('scoreboard.reset')}
             </button>
           ) : null}
-          {!editing ? (
+          {!readOnly && !editing ? (
             <button type="button" className="secondary" onClick={startEdit} disabled={!entries?.length}>
               <FaEdit aria-hidden />
               {t('scoreboard.edit')}
             </button>
-          ) : (
+          ) : null}
+          {!readOnly && editing ? (
             <>
               <button type="button" disabled={saving} onClick={save}>
                 <FaSave aria-hidden />
@@ -179,7 +183,7 @@ export default function ScoreboardEditor({
                 {t('scoreboard.cancel')}
               </button>
             </>
-          )}
+          ) : null}
         </div>
       </div>
 

@@ -29,6 +29,19 @@
     "copyright": "Copyright © {{year}} Obs Trivia game",
     "reportIssue": "Report an issue"
   },
+  "common": {
+    "dismiss": "Dismiss",
+    "connecting": "Connecting…",
+    "subscriptionError": "Subscription error: {{message}}",
+    "copy": "Copy",
+    "preview": "Preview",
+    "done": "Done",
+    "saving": "Saving…",
+    "enable": "Enable",
+    "loading": "Loading…",
+    "copyright": "Copyright © {{year}} Obs Trivia game",
+    "reportIssue": "Report an issue"
+  },
   "setup": {
     "testMessageDefault": "Obs Trivia game chat test — if you see this, votes are ready!",
     "summarySignedIn": "Signed in as {{login}}",
@@ -71,6 +84,11 @@
     "sending": "Sending…",
     "sendTestMessage": "Send test message",
     "testSentSuccess": "Message sent — check your Twitch chat to confirm it appears.",
+    "dockTitle": "Control panel in OBS (optional)",
+    "dockHintObs": "In <strong>OBS Studio</strong>, open <strong>View → Docks → Custom Browser Docks</strong>, add a dock named e.g. Obs Trivia, and paste the URL below.",
+    "dockControlPanelUrl": "Control panel URL",
+    "dockHintNotes": "Keep this desktop app <strong>running</strong> while you stream. Overlays still use Browser Sources (below). In a dock, Twitch sign-in works in the same tab; OBS WebSocket passwords are not auto-filled from the desktop keychain.",
+    "dockHintStreamlabs": "Streamlabs: use this Electron window for the control panel (no Custom Browser Dock support).",
     "overlayHint1": "Add each URL as a <strong>Browser Source</strong> in OBS or Streamlabs. Set width ~900, height ~600, and enable transparent background if your scene needs it.",
     "overlayHint2": "If an overlay looks blank or stuck, right-click the Browser Source in OBS → <strong>Refresh</strong> (or toggle visibility) after this app is running.",
     "liveOverlay": "Live trivia overlay",
